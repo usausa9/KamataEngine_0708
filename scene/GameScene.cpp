@@ -72,6 +72,22 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 
+#ifdef _DEBUG
+
+	if (input_->TriggerKey(DIK_P))
+	{
+		if (isDebugCameraActive_ == true)
+		{
+			isDebugCameraActive_ = false;
+		}
+		else if (isDebugCameraActive_ == false)
+		{
+			isDebugCameraActive_ = true;
+		}
+	}
+#endif 
+
+
 #pragma region ビュー変換行列
 	//	// 視点移動処理
 	//	{
@@ -213,9 +229,18 @@ void GameScene::Update() {
 
 #pragma endregion
 
-	viewProjection_.UpdateMatrix();
 
-	debugCamera_->Update();
+	if (isDebugCameraActive_) {
+		//デバッグカメラの更新
+		debugCamera_->Update();
+		viewProjection_.matView = debugCamera_->GetViewProjection().matView;
+		viewProjection_.matProjection = debugCamera_->GetViewProjection().matProjection;
+		viewProjection_.TransferMatrix();
+	}
+	else {
+		viewProjection_.UpdateMatrix();
+		viewProjection_.TransferMatrix();
+	}
 
 	// 自キャラの更新
 	player_->Update();

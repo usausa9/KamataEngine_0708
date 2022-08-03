@@ -97,6 +97,10 @@ public: // メンバ変数
 
 	// カメラ上方向の角度
 	float viewAngle = 0.0f;
+
+	// デバックカメラ有効
+	bool isDebugCameraActive_ = false;
+
 	/// <summary>
 	/// ゲームシーン用
 	/// </summary>
