@@ -7,6 +7,9 @@ namespace MathUtility {
 
 const float PI = 3.141592654f;
 
+// ベクトルと行列の掛け算
+Vector3 Vector3MultiMatrix4(const Vector3& v, const Matrix4& m);
+
 // 零ベクトルを返す
 const Vector3 Vector3Zero();
 // 2ベクトルが一致しているか調べる

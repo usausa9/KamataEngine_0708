@@ -31,6 +31,8 @@ public:
 	void Move();
 	void Update();
 
+	void DeleteBullet();
+
 	void Attack();
 
 	/// <summary>
