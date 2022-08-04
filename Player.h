@@ -40,7 +40,7 @@ public:
 	/// </summary>
 	void Draw(ViewProjection viewProjection);
 
-private:
+
 
 	// ワールド変換データ
 	WorldTransform worldTransform_;

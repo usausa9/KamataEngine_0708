@@ -23,13 +23,21 @@ void GameScene::Initialize() {
 
 	// ファイル名を指定してテクスチャを読み込む
 	textureHandle_ = TextureManager::Load("mario.jpg");
+	enemyTextureHandle_ = TextureManager::Load("enemy.jpg");
 
 	// 3Dモデルの生成
 	model_ = Model::Create();
+	enemyModel_ = Model::Create();
+
 	// 自キャラの生成
 	player_ = new Player();
 	// 自キャラの初期化
 	player_->Initialize(model_, textureHandle_);
+
+	// 敵キャラを生成
+	enemy_ = new Enemy();
+	// 敵キャラの初期化
+	enemy_->Initialize(enemyModel_, enemyTextureHandle_, enemyPos);
 
 #pragma region ビュー変換行列
 	// カメラ視点座標を設定
@@ -244,6 +252,10 @@ void GameScene::Update() {
 
 	// 自キャラの更新
 	player_->Update();
+
+	if (enemy_) {
+		enemy_->Update();
+	}
 }
 
 void GameScene::Draw() {
@@ -277,6 +289,9 @@ void GameScene::Draw() {
 	// 自キャラの描画
 	player_->Draw(viewProjection_);
 
+	if (enemy_) {
+		enemy_->Draw(viewProjection_);
+	}
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();

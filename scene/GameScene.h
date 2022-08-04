@@ -15,6 +15,7 @@
 #include "Matrix.h"
 #include "Float3.h"
 #include "Player.h"
+#include "Enemy.h"
 
 /// <summary>
 /// ゲームシーン
@@ -71,12 +72,13 @@ public: // メンバ変数
 	Audio* audio_ = nullptr;
 	DebugText* debugText_ = nullptr;
 
-
 	// テクスチャハンドル
 	uint32_t textureHandle_ = 0;
+	uint32_t enemyTextureHandle_ = 0;
 
 	// 3Dモデル
 	Model* model_ = nullptr;
+	Model* enemyModel_ = nullptr;
 
 	// ランダム格納
 	Float3 random;
@@ -94,6 +96,12 @@ public: // メンバ変数
 
 	// 自キャラ
 	Player* player_ = nullptr;
+
+	// 敵キャラ
+	Enemy* enemy_ = nullptr;
+
+	// 敵の位置
+	Vector3 enemyPos{ 0,0,10.0f };
 
 	// カメラ上方向の角度
 	float viewAngle = 0.0f;
