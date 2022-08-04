@@ -1,5 +1,6 @@
 #include "Player.h"
 #include <cassert>
+using namespace MathUtility;
 
 void Player::Initialize(Model* model, uint32_t textureHandle)
 {
@@ -22,6 +23,22 @@ void Player::Initialize(Model* model, uint32_t textureHandle)
 	//matrix_.RotaChange(worldTransform_, 0, 0, 0);
 	//matrix_.ChangeTranslation(worldTransform_, -5, 0, 0);
 	//matrix_.UpdateMatrix(worldTransform_);
+}
+
+void Player::Rotate()
+{
+	//// ƒLƒƒƒ‰ƒNƒ^[‚Ìù‰ñƒxƒNƒgƒ‹
+	//Vector3 rotate = { 0,0,0 };
+
+	const float kRotateSpd = 0.02f;
+
+	if (input_->PushKey(DIK_LEFT)) {
+		worldTransform_.rotation_.y -= kRotateSpd;
+	}
+	else if (input_->PushKey(DIK_RIGHT)) {
+		worldTransform_.rotation_.y += kRotateSpd;
+	}
+	//worldTransform_.rotation_ += rotate;
 }
 
 void Player::Move()
@@ -65,17 +82,41 @@ void Player::Move()
 	worldTransform_.translation_.y = min(worldTransform_.translation_.y, +kMoveLimitY);
 }
 
+void Player::Attack()
+{
+	if (input_->TriggerKey(DIK_SPACE))
+	{
+		// ’e¶¬A‰Šú‰»
+		PlayerBullet* newBullet = new PlayerBullet();
+		newBullet->Initialize(model_, worldTransform_.translation_);
+
+		// ’e‚ð“o˜^
+		bullet_ = newBullet;
+	}
+}
+
 void Player::Update()
 {
+	Player::Rotate();
 	Player::Move();
+	Player::Attack();
+
+	// ’eXV
+	if (bullet_) {
+		bullet_->Update();
+	}
 
 	matrix_.UpdateMatrix(worldTransform_);
 }
 
-
-void Player::Draw(ViewProjection viewProjection_)
+void Player::Draw(ViewProjection viewProjection)
 {
-	model_->Draw(worldTransform_, viewProjection_, textureHandle_);
+	model_->Draw(worldTransform_, viewProjection, textureHandle_);
+
+	// ’e•`‰æ
+	if (bullet_) {
+		bullet_->Draw(viewProjection);
+	}
 
 	debugText_->SetPos(50, 130);
 	debugText_->Printf(
