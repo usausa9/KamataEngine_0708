@@ -59,5 +59,5 @@ private:
 	uint32_t textureHandle_ = 0u;
 
 	// ’e
-	PlayerBullet* bullet_ = nullptr;
+	std::list<std::unique_ptr<PlayerBullet>> bullets_;
 };
