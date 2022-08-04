@@ -10,8 +10,11 @@ GameScene::GameScene() {}
 GameScene::~GameScene() {
 
 	delete model_;
+	delete enemyModel_;
 	delete debugCamera_;
 	delete player_;
+	delete enemy_;
+
 }
 
 void GameScene::Initialize() {
@@ -262,7 +265,6 @@ void GameScene::Draw() {
 
 	// コマンドリストの取得
 	ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList();
-
 
 #pragma region 背景スプライト描画
 	// 背景スプライト描画前処理

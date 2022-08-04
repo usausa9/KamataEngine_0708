@@ -11,6 +11,11 @@
 class Enemy
 {
 public:
+	enum class Phase {
+		Approach,	// 接近する
+		Leave,		// 離脱する
+	};
+
 	void Initialize(Model* model, uint32_t textureHandle, const Vector3& position);
 
 	void Update();
@@ -40,5 +45,13 @@ private:
 	// 速度
 	Vector3 velocity_;
 
+	// フェーズ
+	Phase phase_ = Phase::Approach;
+
+	// 接近のとき
+	void phase_Approach();
+
+	// 離脱のとき
+	void phase_Leave();
 };
 
