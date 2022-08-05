@@ -7,13 +7,17 @@
 #include "Input.h"
 #include "Debugtext.h"
 
-class PlayerBullet
+class EnemyBullet
 {
 public:
+
+	// ‰Šú‰»
 	void Initialize(Model* model, const Vector3& position, const Vector3& velocity);
 
+	// XV
 	void Update();
 
+	// •`‰æ
 	void Draw(const ViewProjection& viewProjection);
 
 	bool IsDead() const { return isDead_; }

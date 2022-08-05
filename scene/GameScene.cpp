@@ -42,6 +42,8 @@ void GameScene::Initialize() {
 	// 敵キャラの初期化
 	enemy_->Initialize(enemyModel_, enemyTextureHandle_, enemyPos);
 
+	enemy_->SetPlayer(player_);
+
 #pragma region ビュー変換行列
 	// カメラ視点座標を設定
 	// viewProjection_.eye = { 0,0,-10 };
