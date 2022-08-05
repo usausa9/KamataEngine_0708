@@ -28,7 +28,7 @@ void Enemy::Update()
 	//// 速度分移動
 	//worldTransform_.translation_ += velocity_;
 
-	switch (phase_) {
+	/*switch (phase_) {
 	case Phase::Approach:
 	default:
 		phase_Approach();
@@ -36,7 +36,10 @@ void Enemy::Update()
 	case Phase::Leave:
 		phase_Leave();
 		break;
-	}
+	}*/
+
+	// メンバ関数ポインタに入っている関数を呼び出す
+	(this->*spFuncTable[static_cast<size_t>(phase_)])();
 
 	// 行列の更新
 	matrix_.UpdateMatrix(worldTransform_);
@@ -67,3 +70,8 @@ void Enemy::phase_Leave()
 	// 移動（ベクトルを加算）
 	worldTransform_.translation_ -= velocity_;
 }
+
+void (Enemy::* Enemy::spFuncTable[])() = {
+	&Enemy::phase_Approach,
+	&Enemy::phase_Leave
+};

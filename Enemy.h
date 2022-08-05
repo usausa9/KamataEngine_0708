@@ -53,5 +53,9 @@ private:
 
 	// 離脱のとき
 	void phase_Leave();
+
+private:
+	// メンバ関数ポインタ
+	static void (Enemy::*spFuncTable[])();
 };
 
