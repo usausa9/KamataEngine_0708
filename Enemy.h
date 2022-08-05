@@ -23,7 +23,6 @@ public:
 	void Draw(const ViewProjection& viewProjection);
 
 private:
-
 	// ワールド変換データ
 	WorldTransform worldTransform_;
 
