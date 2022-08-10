@@ -76,14 +76,19 @@ public: // メンバ変数
 	uint32_t textureHandle_ = 0;
 	uint32_t enemyTextureHandle_ = 0;
 
+	uint32_t backGroundTextureHandle_ = 0;
+
 	// 3Dモデル
 	Model* model_ = nullptr;
 	Model* enemyModel_ = nullptr;
+
+	Model* backGroundModel_ = nullptr;
 
 	// ランダム格納
 	Float3 random;
 
 	// ワールドトランスフォーム
+	WorldTransform backGroundWT[1];
 
 	// ビュープロジェクション
 	ViewProjection viewProjection_;
@@ -93,6 +98,7 @@ public: // メンバ変数
 
 	// まとりっくす
 	Matrix matrix;
+	Matrix backGroundMatrix;
 
 	// 自キャラ
 	Player* player_ = nullptr;

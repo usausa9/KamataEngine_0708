@@ -40,7 +40,8 @@ public:
 	/// </summary>
 	void Draw(ViewProjection viewProjection);
 
-
+	// ワールド座標を取得
+	Vector3 GetWorldPosition();
 
 	// ワールド変換データ
 	WorldTransform worldTransform_;

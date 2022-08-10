@@ -25,7 +25,7 @@ void EnemyBullet::Initialize(Model* model, const Vector3& position, const Vector
 
 void EnemyBullet::Update()
 {
-	worldTransform_.translation_ -= velocity_;
+	worldTransform_.translation_ += velocity_;
 	matrix_.UpdateMatrix(worldTransform_);
 
 	//ŽžŠÔŒo‰ß‚ÅƒfƒX

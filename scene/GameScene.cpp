@@ -11,6 +11,7 @@ GameScene::~GameScene() {
 
 	delete model_;
 	delete enemyModel_;
+	delete backGroundModel_;
 	delete debugCamera_;
 	delete player_;
 	delete enemy_;
@@ -27,10 +28,12 @@ void GameScene::Initialize() {
 	// ファイル名を指定してテクスチャを読み込む
 	textureHandle_ = TextureManager::Load("mario.jpg");
 	enemyTextureHandle_ = TextureManager::Load("enemy.jpg");
+	backGroundTextureHandle_ = TextureManager::Load("backGround.png");
 
 	// 3Dモデルの生成
 	model_ = Model::Create();
 	enemyModel_ = Model::Create();
+	backGroundModel_ = Model::Create();;
 
 	// 自キャラの生成
 	player_ = new Player();
@@ -42,7 +45,15 @@ void GameScene::Initialize() {
 	// 敵キャラの初期化
 	enemy_->Initialize(enemyModel_, enemyTextureHandle_, enemyPos);
 
+	// 敵キャラに自キャラのアドレスを渡す
 	enemy_->SetPlayer(player_);
+	
+	backGroundWT[0].Initialize();
+
+	backGroundMatrix.ScaleChange(backGroundWT[0], 100.0f, 100.0f, 0.1f);
+	backGroundMatrix.RotaChange(backGroundWT[0], 0, 0, 0);
+	backGroundMatrix.ChangeTranslation(backGroundWT[0], 0, 0, 5.0f);
+	backGroundMatrix.UpdateMatrix(backGroundWT[0]);
 
 #pragma region ビュー変換行列
 	// カメラ視点座標を設定
@@ -296,6 +307,8 @@ void GameScene::Draw() {
 	if (enemy_) {
 		enemy_->Draw(viewProjection_);
 	}
+
+	//backGroundModel_->Draw(backGroundWT[0], viewProjection_, backGroundTextureHandle_);
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();

@@ -10,7 +10,7 @@
 
 #include <cassert>
 
-//自機クラスの前方宣言
+// 自機クラスの前方宣言
 class Player;
 
 class Enemy
@@ -30,6 +30,8 @@ public:
 	void DeleteBullet();
 
 	void Fire();
+
+	Vector3 GetWorldPosition();
 
 	void Update();
 
@@ -79,6 +81,7 @@ private:
 	// 弾
 	std::list<std::unique_ptr<EnemyBullet>> bullets_;
 
+	// 自キャラ
 	Player* player_ = nullptr;
 
 private:

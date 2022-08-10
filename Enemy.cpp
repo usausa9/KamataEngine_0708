@@ -1,20 +1,21 @@
+#include "Player.h"
 #include "Enemy.h"
 
 void Enemy::Initialize(Model* model, uint32_t textureHandle, const Vector3& position)
 {
-	//NULLポインタチェック
+	// NULLポインタチェック
 	assert(model);
 
-	//引数データをメンバ変数に記録
+	// 引数データをメンバ変数に記録
 	model_ = model;
 	textureHandle_ = textureHandle;
 
 	debugText_ = DebugText::GetInstance();
 
-	//ワールド変換の初期化
+	// ワールド変換の初期化
 	worldTransform_.Initialize();
 
-	//初期座標に移動
+	// 初期座標に移動
 	worldTransform_.translation_ = position;
 
 	velocity_ = { 0,0,-0.1f };
@@ -36,16 +37,42 @@ void Enemy::DeleteBullet()
 	// デスフラグの立った弾を削除
 	bullets_.remove_if([](std::unique_ptr<EnemyBullet>& bullet) {
 		return bullet->IsDead();
-		});
+	});
+}
+
+Vector3 Enemy::GetWorldPosition()
+{
+	Vector3 worldPos;
+	worldPos = worldTransform_.translation_;
+	return worldPos;
 }
 
 void Enemy::Fire()
 {
 	assert(player_);
 
+	// 弾の速度
+	const float kBulletSpped = 1.0f;
+
+	// 差分ベクトルを格納する変数
+	Vector3 diffVec;
+
+	// 自キャラ、敵キャラのワールド座標を取得
+	Vector3 playerPos = player_->GetWorldPosition();
+	Vector3 enemyPos = worldTransform_.translation_;
+
+	// 差分ベクトルを求める
+	diffVec = playerPos - enemyPos;
+
+	// 差分ベクトルの正規化
+	diffVec.normalize();
+
+	// ベクトルの長さを、速さに合わせる。( ←は？ )
+	diffVec *= kBulletSpped;
+
 	// 弾を生成し、初期化
 	std::unique_ptr<EnemyBullet> newBullet = std::make_unique<EnemyBullet>();
-	newBullet->Initialize(model_, worldTransform_.translation_, { 1.0f,0,0 });
+	newBullet->Initialize(model_, worldTransform_.translation_, diffVec);
 	// 弾を登録する
 	bullets_.push_back(std::move(newBullet));
 }
@@ -104,7 +131,7 @@ void Enemy::Phese_FireIni()
 
 void Enemy::Phase_Approach()
 {
-	velocity_ = { 0,0,-0.3f };
+	velocity_ = { 0,0,0 };
 
 	// 移動（ベクトルを加算）
 	worldTransform_.translation_ += velocity_;
@@ -119,10 +146,10 @@ void Enemy::Phase_Approach()
 		fireCoolTime = kFireInterval;
 	}
 
-	// 既定の位置に到達したら離脱に変更
-	if (worldTransform_.translation_.z < 0.0f) {
-		phase_ = Phase::Leave;
-	}
+	//// 既定の位置に到達したら離脱に変更
+	//if (worldTransform_.translation_.z < 0.0f) {
+	//	phase_ = Phase::Leave;
+	//}
 }
 
 void Enemy::Phase_Leave()
