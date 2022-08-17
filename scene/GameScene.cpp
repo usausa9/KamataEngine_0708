@@ -43,14 +43,14 @@ void GameScene::Initialize() {
 	// 敵キャラを生成
 	enemy_ = new Enemy();
 	// 敵キャラの初期化
-	enemy_->Initialize(enemyModel_, enemyTextureHandle_, enemyPos);
+	enemy_->Initialize(enemyModel_, enemyTextureHandle_, enemyPos = {10.0f,0,0});
 
 	// 敵キャラに自キャラのアドレスを渡す
 	enemy_->SetPlayer(player_);
 	
 	backGroundWT[0].Initialize();
 
-	backGroundMatrix.ScaleChange(backGroundWT[0], 100.0f, 100.0f, 0.1f);
+	backGroundMatrix.ScaleChange(backGroundWT[0], 10.0f, 10.0f, 0.1f);
 	backGroundMatrix.RotaChange(backGroundWT[0], 0, 0, 0);
 	backGroundMatrix.ChangeTranslation(backGroundWT[0], 0, 0, 5.0f);
 	backGroundMatrix.UpdateMatrix(backGroundWT[0]);
@@ -110,7 +110,6 @@ void GameScene::Update() {
 		}
 	}
 #endif 
-
 
 #pragma region ビュー変換行列
 	//	// 視点移動処理
@@ -253,7 +252,6 @@ void GameScene::Update() {
 
 #pragma endregion
 
-
 	if (isDebugCameraActive_) {
 		//デバッグカメラの更新
 		debugCamera_->Update();
@@ -272,6 +270,8 @@ void GameScene::Update() {
 	if (enemy_) {
 		enemy_->Update();
 	}
+
+	CheckAllCollisions();
 }
 
 void GameScene::Draw() {
@@ -308,7 +308,7 @@ void GameScene::Draw() {
 		enemy_->Draw(viewProjection_);
 	}
 
-	//backGroundModel_->Draw(backGroundWT[0], viewProjection_, backGroundTextureHandle_);
+	backGroundModel_->Draw(backGroundWT[0], viewProjection_, backGroundTextureHandle_);
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
@@ -338,4 +338,85 @@ void GameScene::Draw() {
 		PrimitiveDrawer::GetInstance()->DrawLine3d({ -20 + (i * 2), -20, 0 }, { -20 + (i * 2), 20, 0 }, { 0,1,0,1 });
 		PrimitiveDrawer::GetInstance()->DrawLine3d({ -20 + (i * 2), 0, -20 }, { -20 + (i * 2) ,0 ,20, }, { 0,0,1,1 });
 	}
+}
+
+void GameScene::CheckAllCollisions()
+{
+	// 判定対象AとBの座標
+	Vector3 posA, posB;
+
+	// 自弾リストの取得
+	const std::list<std::unique_ptr<PlayerBullet>>& playerBullets = player_->GetBullets();
+
+	// 敵弾リストの取得
+	const std::list<std::unique_ptr<EnemyBullet>>& enemyBullets = enemy_->GetBullets();
+
+#pragma region 自キャラと敵弾の当たり判定
+
+	posA = player_->GetWorldPosition();
+
+	for (const std::unique_ptr<EnemyBullet>& enemyBullet : enemyBullets)
+	{
+		posB = enemyBullet->GetWorldPosition();
+
+		float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+		if (len <= 0.5f)
+		{
+			// 自キャラの衝突時コールバックを呼び出す
+			player_->OnCollision();
+
+			// 敵弾の衝突時コールバックを呼び出す
+			enemyBullet->OnCollision();
+
+		}
+	}
+#pragma endregion
+
+#pragma region 自弾と敵キャラの当たり判定
+
+	posA = enemy_->GetWorldPosition();
+
+	for (const std::unique_ptr<PlayerBullet>& playerBullet : playerBullets)
+	{
+		posB = playerBullet->GetWorldPosition();
+
+		float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+		if (len <= 6.0f)
+		{
+			// 自キャラの衝突時コールバックを呼び出す
+			enemy_->OnCollision();
+
+			// 敵弾の衝突時コールバックを呼び出す
+			playerBullet->OnCollision();
+
+		}
+	}
+#pragma endregion
+
+#pragma region 自弾と敵弾の当たり判定
+
+	for (const std::unique_ptr<EnemyBullet>& enemyBullet : enemyBullets)
+	{
+		posA = enemyBullet->GetWorldPosition();
+
+		for (const std::unique_ptr<PlayerBullet>& playerBullet : playerBullets)
+		{
+			posB = playerBullet->GetWorldPosition();
+
+			float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+			if (len <= 6.0f)
+			{
+				// 自キャラの衝突時コールバックを呼び出す
+				enemyBullet->OnCollision();
+
+				// 敵弾の衝突時コールバックを呼び出す
+				playerBullet->OnCollision();
+
+			}
+		}
+	}
+#pragma endregion
 }

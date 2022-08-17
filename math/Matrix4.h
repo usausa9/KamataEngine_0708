@@ -21,4 +21,7 @@ class Matrix4 {
 
 	// 単位行列を作成
 	void IdentityMatrix();
+
+	// 平行投影行列を作成
+	static Matrix4 OrthoGraphicProjection(int winWidth, int winHeight, float nearZ, float farZ);
 };

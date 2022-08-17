@@ -88,7 +88,7 @@ void Player::Attack()
 	{
 		// 弾の速度
 		const float kBulletSpeed = 1.0f;
-		Vector3 velocity(0, 0, kBulletSpeed);
+		Vector3 velocity(kBulletSpeed, 0, 0);
 
 		// 速度ベクトルを自機の向きに合わせて回転させる
 		velocity = Vector3MultiMatrix4(velocity, worldTransform_.matWorld_);
@@ -116,6 +116,10 @@ Vector3 Player::GetWorldPosition()
 	// ワールド行列の平行移動成分を取得
 	worldPos = worldTransform_.translation_;
 	return worldPos;
+}
+
+void Player::OnCollision()
+{
 }
 
 void Player::Update()

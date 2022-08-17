@@ -39,6 +39,11 @@ public:
 
 	void SetPlayer(Player* player) { player_ = player; }
 
+	// 衝突を検出したら呼び出されるコールバック関数
+	void OnCollision();
+
+	const std::list<std::unique_ptr<EnemyBullet>>& GetBullets() { return bullets_; };
+
 private:
 	// ワールド変換データ
 	WorldTransform worldTransform_;

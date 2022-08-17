@@ -124,6 +124,10 @@ void Enemy::Draw(const ViewProjection& viewProjection)
 
 }
 
+void Enemy::OnCollision()
+{
+}
+
 void Enemy::Phese_FireIni()
 {
 	fireCoolTime = kFireInterval;
