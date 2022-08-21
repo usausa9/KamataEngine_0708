@@ -1,8 +1,9 @@
 #include "Player.h"
 #include <cassert>
+#include "MathUtility.h"
 using namespace MathUtility;
 
-void Player::Initialize(Model* model, uint32_t textureHandle)
+void Player::Initialize(Model* model,Model* model2, uint32_t textureHandle)
 {
 	// NULLチェック
 	assert(model);
@@ -10,6 +11,7 @@ void Player::Initialize(Model* model, uint32_t textureHandle)
 
 	// ファイル名を指定してテクスチャを読み込む
 	model_ = model;
+	bulletModel_ = model2;
 	textureHandle_ = textureHandle;
 
 	// シングルトンインスタンスを取得する
@@ -19,10 +21,10 @@ void Player::Initialize(Model* model, uint32_t textureHandle)
 	// ワールド変換の初期化
 	worldTransform_.Initialize();
 
-	//matrix_.ScaleChange(worldTransform_, 0.1f, 0.1f, 7.0f, 1);
-	//matrix_.RotaChange(worldTransform_, 0, 0, 0);
-	//matrix_.ChangeTranslation(worldTransform_, -5, 0, 0);
-	//matrix_.UpdateMatrix(worldTransform_);
+	matrix_.ScaleChange(worldTransform_, 0.3f, 0.3f, 0.3f, 1);
+	matrix_.RotaChange(worldTransform_, 0, 90.0f * MathUtility::PI / 180.0f, 0);
+	matrix_.ChangeTranslation(worldTransform_, 0, 0, 0);
+	matrix_.UpdateMatrix(worldTransform_);
 }
 
 void Player::Rotate()
@@ -30,13 +32,13 @@ void Player::Rotate()
 	//// キャラクターの旋回ベクトル
 	//Vector3 rotate = { 0,0,0 };
 
-	const float kRotateSpd = 0.02f;
+
 
 	if (input_->PushKey(DIK_LEFT)) {
-		worldTransform_.rotation_.y -= kRotateSpd;
+		
 	}
 	else if (input_->PushKey(DIK_RIGHT)) {
-		worldTransform_.rotation_.y += kRotateSpd;
+		
 	}
 	//worldTransform_.rotation_ += rotate;
 }
@@ -46,7 +48,7 @@ void Player::Move()
 	// キャラクターの移動ベクトル
 	Vector3 move = { 0,0,0 };
 
-	const float kMoveSpd = 0.5f;
+	const float kMoveSpd = 5.0f;
 
 	if (input_->PushKey(DIK_A)) {
 		move.x = -kMoveSpd;
@@ -64,22 +66,51 @@ void Player::Move()
 
 	if (input_->PushKey(DIK_W)) {
 		move.y = kMoveSpd;
+
+		if (worldTransform_.rotation_.z <= 0.5f)
+		{
+			worldTransform_.rotation_.z += 0.05f;
+		}
+		
 	}
 	else if (input_->PushKey(DIK_S)) {
-		move.y = -kMoveSpd;
+		move.y = -kMoveSpd; 
+		if (worldTransform_.rotation_.z >= -0.5f)
+		{
+			worldTransform_.rotation_.z -= 0.05f;
+		}
+	}
+	else if (worldTransform_.rotation_.z != 0.0f)
+	{
+		if (worldTransform_.rotation_.z <= -0.05f && worldTransform_.rotation_.z >= -0.05f)
+		{
+			worldTransform_.rotation_.z = 0.0f;
+		}
+		else if (worldTransform_.rotation_.z < -0.05f)
+		{
+			worldTransform_.rotation_.z += 0.03f;
+		}
+		else if (worldTransform_.rotation_.z > 0.05f)
+		{
+			worldTransform_.rotation_.z -= 0.03f;
+		}	
+	}
+	else if (worldTransform_.rotation_.z = 0.0f)
+	{
+
 	}
 
 	worldTransform_.translation_ += move;
 
 	//移動限界
-	const float kMoveLimitX = 34.0f;
-	const float kMoveLimitY = 18.0f;
+	const float kMoveLimitX = 790.0f;
+	const float kMoveLimitY = 635.0f;
 
 	//範囲を超えない処理
-	worldTransform_.translation_.x = max(worldTransform_.translation_.x, -kMoveLimitX);
-	worldTransform_.translation_.x = min(worldTransform_.translation_.x, +kMoveLimitX);
-	worldTransform_.translation_.y = max(worldTransform_.translation_.y, -kMoveLimitY);
-	worldTransform_.translation_.y = min(worldTransform_.translation_.y, +kMoveLimitY);
+	worldTransform_.translation_.x = max(worldTransform_.translation_.x, 75);
+	worldTransform_.translation_.x = min(worldTransform_.translation_.x, kMoveLimitX);
+	worldTransform_.translation_.y = max(worldTransform_.translation_.y, 100);
+	worldTransform_.translation_.y = min(worldTransform_.translation_.y, kMoveLimitY);
 }
 
 void Player::Attack()
@@ -87,15 +118,16 @@ void Player::Attack()
 	if (input_->TriggerKey(DIK_SPACE))
 	{
 		// 弾の速度
-		const float kBulletSpeed = 1.0f;
-		Vector3 velocity(kBulletSpeed, 0, 0);
+		const float kBulletSpeed = 30.0f;
+		Vector3 velocity(0, 0, kBulletSpeed);
 
 		// 速度ベクトルを自機の向きに合わせて回転させる
 		velocity = Vector3MultiMatrix4(velocity, worldTransform_.matWorld_);
 
+		Vector3 bulletPrefab = { worldTransform_.translation_.x + 40.0f,worldTransform_.translation_.y +2.0f,worldTransform_.translation_.z };
 		// 弾生成、初期化
 		std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
-		newBullet->Initialize(model_, worldTransform_.translation_, velocity);
+		newBullet->Initialize(bulletModel_, bulletPrefab, velocity);
 
 		// 弾を登録
 		bullets_.push_back(std::move(newBullet));
@@ -139,7 +171,7 @@ void Player::Update()
 
 void Player::Draw(ViewProjection viewProjection)
 {
-	model_->Draw(worldTransform_, viewProjection, textureHandle_);
+	model_->Draw(worldTransform_, viewProjection);
 
 	// 弾描画
 	for (std::unique_ptr<PlayerBullet>&bullet : bullets_) {

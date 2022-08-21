@@ -8,6 +8,7 @@
 #include "SafeDelete.h"
 #include "Sprite.h"
 #include "ViewProjection.h"
+#include "MyViewProjection.h"
 #include "WorldTransform.h"
 
 #include "DebugCamera.h"
@@ -77,30 +78,31 @@ public: // メンバ変数
 	// テクスチャハンドル
 	uint32_t textureHandle_ = 0;
 	uint32_t enemyTextureHandle_ = 0;
-
+	uint32_t bulletModelTextureHandle_ = 0;
 	uint32_t backGroundTextureHandle_ = 0;
+	uint32_t groundTextureHandle_ = 0;
 
-	// 3Dモデル
+	// 3Dモデル.スプライト
 	Model* model_ = nullptr;
+	Model* bulletModel_ = nullptr;
 	Model* enemyModel_ = nullptr;
 
-	Model* backGroundModel_ = nullptr;
+	Sprite* backGroundSprite_ = nullptr;
+	Sprite* groundSprite_ = nullptr;
 
 	// ランダム格納
 	Float3 random;
 
 	// ワールドトランスフォーム
-	WorldTransform backGroundWT[1];
 
 	// ビュープロジェクション
-	ViewProjection viewProjection_;
+	MyViewProjection viewProjection_;
 
 	// デバッグカメラ
 	DebugCamera* debugCamera_ = nullptr;
 
 	// まとりっくす
 	Matrix matrix;
-	Matrix backGroundMatrix;
 
 	// 自キャラ
 	Player* player_ = nullptr;

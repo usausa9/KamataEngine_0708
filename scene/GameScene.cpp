@@ -10,8 +10,10 @@ GameScene::GameScene() {}
 GameScene::~GameScene() {
 
 	delete model_;
+	delete bulletModel_;
 	delete enemyModel_;
-	delete backGroundModel_;
+	delete backGroundSprite_;
+	delete groundSprite_;
 	delete debugCamera_;
 	delete player_;
 	delete enemy_;
@@ -26,19 +28,24 @@ void GameScene::Initialize() {
 	debugText_ = DebugText::GetInstance();
 
 	// ファイル名を指定してテクスチャを読み込む
-	textureHandle_ = TextureManager::Load("mario.jpg");
+	textureHandle_ = TextureManager::Load("tex.jpg");
 	enemyTextureHandle_ = TextureManager::Load("enemy.jpg");
+	bulletModelTextureHandle_ = TextureManager::Load("uvChecker.png");
 	backGroundTextureHandle_ = TextureManager::Load("backGround.png");
+	groundTextureHandle_ = TextureManager::Load("Ground.png");
 
-	// 3Dモデルの生成
-	model_ = Model::Create();
+	// 3Dモデル.スプライトの生成
+	model_ = Model::CreateFromOBJ("vicviper");
+	bulletModel_ = Model::Create();
 	enemyModel_ = Model::Create();
-	backGroundModel_ = Model::Create();;
+
+	backGroundSprite_ = Sprite::Create(backGroundTextureHandle_, { 0,0 });
+	groundSprite_ = Sprite::Create(groundTextureHandle_, { 0,0 });
 
 	// 自キャラの生成
 	player_ = new Player();
 	// 自キャラの初期化
-	player_->Initialize(model_, textureHandle_);
+	player_->Initialize(model_, bulletModel_, textureHandle_);
 
 	// 敵キャラを生成
 	enemy_ = new Enemy();
@@ -47,13 +54,6 @@ void GameScene::Initialize() {
 
 	// 敵キャラに自キャラのアドレスを渡す
 	enemy_->SetPlayer(player_);
-	
-	backGroundWT[0].Initialize();
-
-	backGroundMatrix.ScaleChange(backGroundWT[0], 10.0f, 10.0f, 0.1f);
-	backGroundMatrix.RotaChange(backGroundWT[0], 0, 0, 0);
-	backGroundMatrix.ChangeTranslation(backGroundWT[0], 0, 0, 5.0f);
-	backGroundMatrix.UpdateMatrix(backGroundWT[0]);
 
 #pragma region ビュー変換行列
 	// カメラ視点座標を設定
@@ -258,9 +258,16 @@ void GameScene::Update() {
 		viewProjection_.matView = debugCamera_->GetViewProjection().matView;
 		viewProjection_.matProjection = debugCamera_->GetViewProjection().matProjection;
 		viewProjection_.TransferMatrix();
+
+		for (float i = 0; i < 21; i++)
+		{
+			PrimitiveDrawer::GetInstance()->DrawLine3d({ -20, -20 + (i * 2), 0 }, { 20, -20 + (i * 2), 0 }, { 1,0,0,1 });
+			PrimitiveDrawer::GetInstance()->DrawLine3d({ -20 + (i * 2), -20, 0 }, { -20 + (i * 2), 20, 0 }, { 0,1,0,1 });
+			PrimitiveDrawer::GetInstance()->DrawLine3d({ -20 + (i * 2), 0, -20 }, { -20 + (i * 2) ,0 ,20, }, { 0,0,1,1 });
+		}
 	}
 	else {
-		viewProjection_.UpdateMatrix();
+		viewProjection_.UpdateMatrixAsOrtho();
 		viewProjection_.TransferMatrix();
 	}
 
@@ -286,6 +293,8 @@ void GameScene::Draw() {
 	/// <summary>
 	/// ここに背景スプライトの描画処理を追加できる
 	/// </summary>
+	
+	backGroundSprite_->Draw();
 
 	// スプライト描画後処理
 	Sprite::PostDraw();
@@ -308,8 +317,6 @@ void GameScene::Draw() {
 		enemy_->Draw(viewProjection_);
 	}
 
-	backGroundModel_->Draw(backGroundWT[0], viewProjection_, backGroundTextureHandle_);
-
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
 #pragma endregion
@@ -321,6 +328,8 @@ void GameScene::Draw() {
 	/// <summary>
 	/// ここに前景スプライトの描画処理を追加できる
 	/// </summary>
+	
+	groundSprite_->Draw();
 
 	// デバッグテキストの描画
 	debugText_->DrawAll(commandList);
@@ -331,13 +340,8 @@ void GameScene::Draw() {
 #pragma endregion
 
 	// ライン描画が参照するビュープロジェクションを指定する (アドレス渡し)
-
-	for (float i = 0; i < 21; i++)
-	{
-		PrimitiveDrawer::GetInstance()->DrawLine3d({ -20, -20 + (i * 2), 0 }, { 20, -20 + (i * 2), 0 }, { 1,0,0,1 });
-		PrimitiveDrawer::GetInstance()->DrawLine3d({ -20 + (i * 2), -20, 0 }, { -20 + (i * 2), 20, 0 }, { 0,1,0,1 });
-		PrimitiveDrawer::GetInstance()->DrawLine3d({ -20 + (i * 2), 0, -20 }, { -20 + (i * 2) ,0 ,20, }, { 0,0,1,1 });
-	}
+	
+	
 }
 
 void GameScene::CheckAllCollisions()

@@ -23,7 +23,7 @@ void PlayerBullet::Initialize(Model* model, const Vector3& position, const Vecto
 
 void PlayerBullet::Update()
 {
-	matrix_.ScaleChange(worldTransform_, 1, 1, 1, 1);
+	matrix_.ScaleChange(worldTransform_, 5, 5, 5, 1);
 	matrix_.RotaChange(worldTransform_, 0, 0, 0);
 
 	// ç¿ïWÇà⁄ìÆÇ≥ÇπÇÈ

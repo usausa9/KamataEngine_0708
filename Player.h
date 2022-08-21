@@ -22,7 +22,7 @@ public:
 	/// </summary>
 	/// <param name="model">モデル</param>
 	/// <param name="textureHandle">テクスチャハンドル</param>
-	void Initialize(Model* model, uint32_t textureHandle);
+	void Initialize(Model* model, Model* model2, uint32_t textureHandle);
 
 	/// <summary>
 	/// 更新
@@ -53,6 +53,7 @@ public:
 
 	// モデル
 	Model* model_ = nullptr;
+	Model* bulletModel_ = nullptr;
 
 	// インプット
 	Input* input_ = nullptr;
