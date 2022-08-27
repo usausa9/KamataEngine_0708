@@ -49,6 +49,18 @@
     <Filter Include="ヘッダー ファイル\math">
       <UniqueIdentifier>{647f4977-924a-4954-923f-5619e5afc9a3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\Enemy">
+      <UniqueIdentifier>{23984af2-f052-4a22-9adc-0e6993f1e43e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Player">
+      <UniqueIdentifier>{bfc20591-9c14-4ce3-8521-d773ab6db1f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Player">
+      <UniqueIdentifier>{91dd3f8b-63a4-4488-b5a2-b96eb6d3c1ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Enemy">
+      <UniqueIdentifier>{73327ffb-77c7-49eb-8a9d-1cc468921909}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -72,26 +84,38 @@
     <ClCompile Include="Matrix4.cpp">
       <Filter>ソース ファイル\math</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="PlayerBullet.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="MathUtility.cpp">
       <Filter>ソース ファイル\math</Filter>
-    </ClCompile>
-    <ClCompile Include="Enemy.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="EnemyBullet.cpp">
-      <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Vector3.cpp">
       <Filter>ソース ファイル\math</Filter>
     </ClCompile>
     <ClCompile Include="MyViewProjection.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision.cpp">
+      <Filter>ソース ファイル\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>ソース ファイル\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyBullet.cpp">
+      <Filter>ソース ファイル\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>ソース ファイル\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerBullet.cpp">
+      <Filter>ソース ファイル\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy2.cpp">
+      <Filter>ソース ファイル\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="PadInput.cpp">
+      <Filter>ソース ファイル\input</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector2.cpp">
+      <Filter>ソース ファイル\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -182,20 +206,32 @@
     <ClInclude Include="Float3.h">
       <Filter>ヘッダー ファイル\math</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PlayerBullet.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Enemy.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="EnemyBullet.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="MyViewProjection.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Collision.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>ヘッダー ファイル\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerBullet.h">
+      <Filter>ヘッダー ファイル\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.h">
+      <Filter>ヘッダー ファイル\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyBullet.h">
+      <Filter>ヘッダー ファイル\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy2.h">
+      <Filter>ヘッダー ファイル\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="PadInput.h">
+      <Filter>ヘッダー ファイル\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector2.h">
+      <Filter>ソース ファイル\math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

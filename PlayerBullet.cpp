@@ -9,7 +9,7 @@ void PlayerBullet::Initialize(Model* model, const Vector3& position, const Vecto
 	model_ = model;
 
 	// テクスチャ読み込み
-	textureHandle_ = TextureManager::Load("uvChecker.png");
+	textureHandle_ = TextureManager::Load("Bullet.png");
 
 	// ワールドトランスフォーム初期化
 	worldTransform_.Initialize();
@@ -23,7 +23,7 @@ void PlayerBullet::Initialize(Model* model, const Vector3& position, const Vecto
 
 void PlayerBullet::Update()
 {
-	matrix_.ScaleChange(worldTransform_, 5, 5, 5, 1);
+	matrix_.ScaleChange(worldTransform_, 20.0f, 20.0f, 20.0f, 1);
 	matrix_.RotaChange(worldTransform_, 0, 0, 0);
 
 	// 座標を移動させる
@@ -31,6 +31,15 @@ void PlayerBullet::Update()
 
 	// 時間経過で消える
 	if (--deathTimer_ <= 0) {
+		isDead_ = true;
+	}
+
+	// 移動限界
+	const float kMoveLimitX = 850.0f;
+
+	// 範囲を超えない処理
+	if (worldTransform_.translation_.x > kMoveLimitX)
+	{
 		isDead_ = true;
 	}
 

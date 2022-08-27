@@ -8,6 +8,11 @@ Vector3::Vector3() : x(0), y(0), z(0) {}
 // x,y成分を指定しての生成
 Vector3::Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 
+float Vector3::lengthSquared() const
+{
+	return (x * x + y * y + z * z);
+}
+
 // ノルム(長さ)を求める
 float Vector3::length() const
 {
@@ -39,7 +44,6 @@ Vector3 Vector3::cross(const Vector3& v) const
 		z * v.x - x * v.z,
 		x * v.y - y * v.x
 	);
-
 }
 
 // 単項演算子オーバーロード

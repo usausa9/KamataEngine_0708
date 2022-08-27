@@ -14,6 +14,7 @@ public:
 	Vector3(float x, float y, float z);	// x,y成分を指定しての生成
 
 	// メンバ関数
+	float lengthSquared() const;
 	float length() const;				// ノルム(長さ)を求める
 	Vector3& normalize();				// 正規化
 	float dot(const Vector3& v) const;	// 内積を求める

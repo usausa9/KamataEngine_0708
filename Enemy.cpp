@@ -18,18 +18,21 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle, const Vector3& posi
 	// 初期座標に移動
 	worldTransform_.translation_ = position;
 
-	velocity_ = { 0,0,-0.1f };
+	velocity_ = { -5.0f,0,0 };
+	velocity2_ = { +5.0f,-5.0f,0 };
+	velocity3_ = { +5.0f,5.0f,0 };
+	velocity4_ = { +10.0f,0,0 };
 
-	Phese_FireIni();
+	//Phese_FireIni();
 
 	matrix_.UpdateMatrix(worldTransform_);
 
-	fireCoolTime = 20;
+	//fireCoolTime = 20;
 
-	/*matrix_.ScaleChange(worldTransform_, 1, 1, 1, 1);
+	matrix_.ScaleChange(worldTransform_, 25.0f, 25.0f, 25.0f, 1);
 	matrix_.RotaChange(worldTransform_, 0, 0, 0);
-	matrix_.ChangeTranslation(worldTransform_, 0, 3, 50);
-	matrix_.UpdateMatrix(worldTransform_);*/
+	matrix_.ChangeTranslation(worldTransform_, position.x, position.y, position.z);
+	matrix_.UpdateMatrix(worldTransform_);
 }
 
 void Enemy::DeleteBullet()
@@ -70,11 +73,11 @@ void Enemy::Fire()
 	// ベクトルの長さを、速さに合わせる。( ←は？ )
 	diffVec *= kBulletSpped;
 
-	// 弾を生成し、初期化
-	std::unique_ptr<EnemyBullet> newBullet = std::make_unique<EnemyBullet>();
-	newBullet->Initialize(model_, worldTransform_.translation_, diffVec);
-	// 弾を登録する
-	bullets_.push_back(std::move(newBullet));
+	//// 弾を生成し、初期化
+	//std::unique_ptr<EnemyBullet> newBullet = std::make_unique<EnemyBullet>();
+	//newBullet->Initialize(model_, worldTransform_.translation_, diffVec);
+	//// 弾を登録する
+	//bullets_.push_back(std::move(newBullet));
 }
 
 void Enemy::Update()
@@ -82,8 +85,50 @@ void Enemy::Update()
 	Enemy::DeleteBullet();
 	//Enemy::Fire();
 
-	//// 速度分移動
-	//worldTransform_.translation_ += velocity_;
+	Vector3 playerPos = player_->GetWorldPosition();
+
+	if (playerPos.x > worldTransform_.translation_.x - 100 && phase == 0)
+	{
+		if (worldTransform_.translation_.y >= 400)
+		{
+			phase = 1;
+		}
+		else
+		{
+			phase = 2;
+		}
+	}
+
+	if (playerPos.y >= worldTransform_.translation_.y && phase == 1)
+	{
+		phase = 3;
+	}
+	if (playerPos.y <= worldTransform_.translation_.y && phase == 2)
+	{
+		phase = 3;
+	}
+
+	if (phase == 0)
+	{ 
+		// 速度分移動
+		worldTransform_.translation_ += velocity_;
+	}
+	else if (phase == 1)
+	{
+		// 速度分移動
+		worldTransform_.translation_ += velocity2_;
+	}
+	else if (phase == 2)
+	{
+		// 速度分移動
+		worldTransform_.translation_ += velocity3_;
+	}
+	else if (phase == 3)
+	{
+		// 速度分移動
+		worldTransform_.translation_ += velocity4_;
+	}
+
 
 	/*switch (phase_) {
 	case Phase::Approach:
@@ -95,8 +140,8 @@ void Enemy::Update()
 		break;
 	}*/
 
-	// メンバ関数ポインタに入っている関数を呼び出す
-	(this->*spFuncTable[static_cast<size_t>(phase_)])();
+	//// メンバ関数ポインタに入っている関数を呼び出す
+	//(this->*spFuncTable[static_cast<size_t>(phase_)])();
 
 	// 弾更新
 	for (std::unique_ptr<EnemyBullet>& bullet : bullets_) {
@@ -111,60 +156,53 @@ void Enemy::Draw(const ViewProjection& viewProjection)
 {
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
 
-	//弾描画
+	// 弾描画
 	for (std::unique_ptr<EnemyBullet>& bullet : bullets_) {
 		bullet->Draw(viewProjection);
 	}
-
-	//デバッグ表示
-	debugText_->SetPos(50, 190);
-	debugText_->Printf(
-		"fireCoolTime:(%d)",
-		fireCoolTime);
-
 }
 
 void Enemy::OnCollision()
 {
 }
 
-void Enemy::Phese_FireIni()
-{
-	fireCoolTime = kFireInterval;
-}
-
-void Enemy::Phase_Approach()
-{
-	velocity_ = { 0,0,0 };
-
-	// 移動（ベクトルを加算）
-	worldTransform_.translation_ += velocity_;
-
-	// 発射タイマーカウントダウン
-	fireCoolTime--;
-
-	// 指定時間に達した
-	if (fireCoolTime <= 0) {
-		Fire();
-		// 発射タイマーの初期化
-		fireCoolTime = kFireInterval;
-	}
-
-	//// 既定の位置に到達したら離脱に変更
-	//if (worldTransform_.translation_.z < 0.0f) {
-	//	phase_ = Phase::Leave;
-	//}
-}
-
-void Enemy::Phase_Leave()
-{
-	velocity_ = { 0.3f,0,0 };
-
-	// 移動（ベクトルを加算）
-	worldTransform_.translation_ -= velocity_;
-}
-
-void (Enemy::* Enemy::spFuncTable[])() = {
-	&Enemy::Phase_Approach,
-	&Enemy::Phase_Leave
-};
+//void Enemy::Phese_FireIni()
+//{
+//	fireCoolTime = kFireInterval;
+//}
+//
+//void Enemy::Phase_Approach()
+//{
+//	velocity_ = { 0,0,0 };
+//
+//	// 移動（ベクトルを加算）
+//	worldTransform_.translation_ += velocity_;
+//
+//	// 発射タイマーカウントダウン
+//	fireCoolTime--;
+//
+//	// 指定時間に達した
+//	if (fireCoolTime <= 0) {
+//		//Fire();
+//		// 発射タイマーの初期化
+//		fireCoolTime = kFireInterval;
+//	}
+//
+//	//// 既定の位置に到達したら離脱に変更
+//	//if (worldTransform_.translation_.z < 0.0f) {
+//	//	phase_ = Phase::Leave;
+//	//}
+//}
+//
+//void Enemy::Phase_Leave()
+//{
+//	velocity_ = { 0.3f,0,0 };
+//
+//	// 移動（ベクトルを加算）
+//	worldTransform_.translation_ -= velocity_;
+//}
+//
+//void (Enemy::* Enemy::spFuncTable[])() = {
+//	&Enemy::Phase_Approach,
+//	&Enemy::Phase_Leave
+//};

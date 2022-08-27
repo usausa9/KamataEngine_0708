@@ -7,6 +7,7 @@
 #include "Debugtext.h"
 #include "Matrix.h"
 #include "PlayerBullet.h"
+#include "PadInput.h"
 
 #include<memory>
 #include<list>
@@ -16,6 +17,24 @@
 /// </summary>
 class Player
 {
+	enum BoostState
+	{
+		NONE,
+		SELECT,
+		USED,
+		USEDSELECT
+	};
+
+	enum BoostName
+	{
+	/*	NONE,*/
+		SPEEDUP,
+		MISSILE,
+		DOUBLE,
+		LASER,
+		OPTION,
+		_NONE
+	};
 public:
 	/// <summary>
 	/// 初期化
@@ -29,6 +48,8 @@ public:
 	/// </summary>
 	void Rotate();
 	void Move();
+
+	void ChangeBoost();
 	void Update();
 
 	void DeleteBullet();
@@ -55,8 +76,15 @@ public:
 	Model* model_ = nullptr;
 	Model* bulletModel_ = nullptr;
 
+
+	int boostSelect = 5;
+	int boost[5] = {0,0,0,0,0};
+
+	int shotTimer = 12;
+
 	// インプット
 	Input* input_ = nullptr;
+	PadInput pad_;
 
 	// デバックテキスト
 	DebugText* debugText_ = nullptr;

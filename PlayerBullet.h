@@ -23,6 +23,11 @@ public:
 
 	Vector3 GetWorldPosition();
 
+	// 速度
+	Vector3 velocity_;
+
+	float radius = 5.0f;
+
 private:
 	// ワールド変換データ
 	WorldTransform worldTransform_;
@@ -35,9 +40,6 @@ private:
 
 	// テクスチャハンドル
 	uint32_t textureHandle_ = 0u;
-
-	// 速度
-	Vector3 velocity_;
 
 	// 寿命
 	static const int32_t kLifeTime = 60 * 3;

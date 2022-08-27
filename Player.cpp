@@ -16,6 +16,7 @@ void Player::Initialize(Model* model,Model* model2, uint32_t textureHandle)
 
 	// シングルトンインスタンスを取得する
 	input_ = Input::GetInstance();
+	pad_.Initialize();
 	debugText_ = DebugText::GetInstance();
 
 	// ワールド変換の初期化
@@ -23,7 +24,7 @@ void Player::Initialize(Model* model,Model* model2, uint32_t textureHandle)
 
 	matrix_.ScaleChange(worldTransform_, 0.3f, 0.3f, 0.3f, 1);
 	matrix_.RotaChange(worldTransform_, 0, 90.0f * MathUtility::PI / 180.0f, 0);
-	matrix_.ChangeTranslation(worldTransform_, 0, 0, 0);
+	matrix_.ChangeTranslation(worldTransform_, 144.0f, 360.0f, 0);
 	matrix_.UpdateMatrix(worldTransform_);
 }
 
@@ -45,11 +46,21 @@ void Player::Rotate()
 
 void Player::Move()
 {
+	pad_.Update();
+
 	// キャラクターの移動ベクトル
 	Vector3 move = { 0,0,0 };
 
-	const float kMoveSpd = 5.0f;
+	float kMoveSpd = 5.0f;
 
+	if (boost[SPEEDUP] == USED || boost[SPEEDUP] == USEDSELECT)
+	{
+		kMoveSpd = 7.5f;
+	}
+
+	move.x = pad_.GetLStick().x * kMoveSpd;
+	move.y = pad_.GetLStick().y * kMoveSpd;
+	
 	if (input_->PushKey(DIK_A)) {
 		move.x = -kMoveSpd;
 	}
@@ -100,37 +111,262 @@ void Player::Move()
 
 	}
 
+	if (pad_.GetLStick().y < 0) {
+		pad_.GetLStick().y * kMoveSpd;
+
+		if (worldTransform_.rotation_.z <= 0.5f)
+		{
+			worldTransform_.rotation_.z += 0.05f;
+		}
+
+	}
+	else if (pad_.GetLStick().y > 0) {
+		pad_.GetLStick().y* kMoveSpd;
+		if (worldTransform_.rotation_.z >= -0.5f)
+		{
+			worldTransform_.rotation_.z -= 0.05f;
+		}
+	}
+	else if (worldTransform_.rotation_.z != 0.0f)
+	{
+		if (worldTransform_.rotation_.z <= -0.05f && worldTransform_.rotation_.z >= -0.05f)
+		{
+			worldTransform_.rotation_.z = 0.0f;
+		}
+		else if (worldTransform_.rotation_.z < -0.05f)
+		{
+			worldTransform_.rotation_.z += 0.03f;
+		}
+		else if (worldTransform_.rotation_.z > 0.05f)
+		{
+			worldTransform_.rotation_.z -= 0.03f;
+		}
+	}
+	else if (worldTransform_.rotation_.z = 0.0f)
+	{
+
+	}
+
 	worldTransform_.translation_ += move;
 
-	//移動限界
+	// 移動限界
 	const float kMoveLimitX = 790.0f;
 	const float kMoveLimitY = 635.0f;
 
-	//範囲を超えない処理
+	// 範囲を超えない処理
 	worldTransform_.translation_.x = max(worldTransform_.translation_.x, 75);
 	worldTransform_.translation_.x = min(worldTransform_.translation_.x, kMoveLimitX);
 	worldTransform_.translation_.y = max(worldTransform_.translation_.y, 100);
 	worldTransform_.translation_.y = min(worldTransform_.translation_.y, kMoveLimitY);
 }
 
+void Player::ChangeBoost()
+{
+	if (pad_.IsButtonTrigger(XINPUT_GAMEPAD_Y))
+	{
+		if (boostSelect != _NONE)
+		{
+			boostSelect++;
+		}
+		else
+		{
+			boostSelect = SPEEDUP;
+		}
+	}
+
+	for (int i = 0; i < 5; i++)
+	{
+		if (boost[DOUBLE] == USED && boost[LASER] == SELECT)
+		{
+			if (input_->TriggerKey(DIK_M) || pad_.IsButtonTrigger(XINPUT_GAMEPAD_B))
+			{
+				boost[DOUBLE] = NONE;
+				boost[LASER] = USED;
+				boostSelect = _NONE;
+			}
+		}
+		else if (boost[DOUBLE] == SELECT && boost[LASER] == USED)
+		{
+			if (input_->TriggerKey(DIK_M) || pad_.IsButtonTrigger(XINPUT_GAMEPAD_B))
+			{
+				boost[DOUBLE] = USED;
+				boost[LASER] = NONE;
+				boostSelect = _NONE;
+			}
+		}
+		else if (boost[i] == SELECT)
+		{
+			if (input_->TriggerKey(DIK_M) || pad_.IsButtonTrigger(XINPUT_GAMEPAD_B))
+			{
+				boost[i] = USED;
+				boostSelect = _NONE;
+			}
+		}
+	}
+	
+	if (boostSelect == SPEEDUP)
+	{
+		if (boost[SPEEDUP] == NONE)
+		{
+			boost[SPEEDUP] = SELECT;
+		}
+		else if (boost[SPEEDUP] == USED)
+		{
+			boost[SPEEDUP] = USEDSELECT;
+		}
+	}
+	if (boostSelect == MISSILE)
+	{
+		if (boost[MISSILE] == NONE)
+		{
+			boost[MISSILE] = SELECT;
+		}
+		else if (boost[MISSILE] == USED)
+		{
+			boost[MISSILE] = USEDSELECT;
+		}
+
+		if (boost[SPEEDUP] == SELECT)
+		{
+			boost[SPEEDUP] = NONE;
+		}
+		else if (boost[SPEEDUP] == USEDSELECT)
+		{
+			boost[SPEEDUP] = USED;
+		}
+	}
+	if (boostSelect == DOUBLE)
+	{
+		if (boost[DOUBLE] == NONE)
+		{
+			boost[DOUBLE] = SELECT;
+		}
+		else if (boost[DOUBLE] == USED)
+		{
+			boost[DOUBLE] = USEDSELECT;
+		}
+
+		if (boost[MISSILE] == SELECT)
+		{
+			boost[MISSILE] = NONE;
+		}
+		else if (boost[MISSILE] == USEDSELECT)
+		{
+			boost[MISSILE] = USED;
+		}
+	}
+	if (boostSelect == LASER)
+	{
+		if (boost[LASER] == NONE)
+		{
+			boost[LASER] = SELECT;
+		}
+		else if (boost[LASER] == USED)
+		{
+			boost[LASER] = USEDSELECT;
+		}
+
+		if (boost[DOUBLE] == SELECT)
+		{
+			boost[DOUBLE] = NONE;
+		}
+		else if (boost[DOUBLE] == USEDSELECT)
+		{
+			boost[DOUBLE] = USED;
+		}
+	}
+	if (boostSelect == OPTION)
+	{
+		if (boost[OPTION] == NONE)
+		{
+			boost[OPTION] = SELECT;
+		}
+		else if (boost[OPTION] == USED)
+		{
+			boost[OPTION] = USEDSELECT;
+		}
+
+		if (boost[LASER] == SELECT)
+		{
+			boost[LASER] = NONE;
+		}
+		else if (boost[LASER] == USEDSELECT)
+		{
+			boost[LASER] = USED;
+		}
+	}
+	if (boostSelect == _NONE)
+	{
+		if (boost[OPTION] == SELECT)
+		{
+			boost[OPTION] = NONE;
+		}
+		else if (boost[OPTION] == USEDSELECT)
+		{
+			boost[OPTION] = USED;
+		}
+	}
+}
+
 void Player::Attack()
 {
-	if (input_->TriggerKey(DIK_SPACE))
+	if (input_->PushKey(DIK_SPACE) || pad_.IsButtonDown(XINPUT_GAMEPAD_A))
 	{
-		// 弾の速度
-		const float kBulletSpeed = 30.0f;
-		Vector3 velocity(0, 0, kBulletSpeed);
+		shotTimer--;
+		if( shotTimer == 0 || input_->TriggerKey(DIK_SPACE) || pad_.IsButtonTrigger(XINPUT_GAMEPAD_A))
+		{
+			// 弾の速度
+			const float kBulletSpeed = 15.0f;
+			Vector3 velocity(kBulletSpeed, 0, 0);
 
-		// 速度ベクトルを自機の向きに合わせて回転させる
-		velocity = Vector3MultiMatrix4(velocity, worldTransform_.matWorld_);
+			Vector3 velocity2(kBulletSpeed, kBulletSpeed/2, 0);
 
-		Vector3 bulletPrefab = { worldTransform_.translation_.x + 40.0f,worldTransform_.translation_.y +2.0f,worldTransform_.translation_.z };
-		// 弾生成、初期化
-		std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
-		newBullet->Initialize(bulletModel_, bulletPrefab, velocity);
+			Vector3 velocity3(7.5f, -6.7f, 0);
 
-		// 弾を登録
-		bullets_.push_back(std::move(newBullet));
+			//// 速度ベクトルを自機の向きに合わせて回転させる
+			//velocity = Vector3MultiMatrix4(velocity, worldTransform_.matWorld_);
+
+			Vector3 bulletPrefab = { worldTransform_.translation_.x + 45.0f,worldTransform_.translation_.y + 2.0f,worldTransform_.translation_.z };
+			// 弾生成、初期化
+
+			if (boost[LASER] == NONE || boost[LASER] == SELECT)
+			{
+				std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
+				newBullet->Initialize(bulletModel_, bulletPrefab, velocity);
+				// 弾を登録
+				bullets_.push_back(std::move(newBullet));
+			}
+			else if(boost[LASER] == USED || boost[LASER] == USEDSELECT)
+			{
+
+			}
+
+			if (boost[DOUBLE] == USED || boost[DOUBLE] == USEDSELECT)
+			{
+				// 弾生成、初期化
+				std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
+				newBullet->Initialize(bulletModel_, bulletPrefab, velocity2);
+
+				// 弾を登録
+				bullets_.push_back(std::move(newBullet));
+			}
+
+			if (boost[MISSILE] == USED || boost[MISSILE] == USEDSELECT)
+			{
+				// 弾生成、初期化
+				std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
+				newBullet->Initialize(bulletModel_, bulletPrefab, velocity3);
+
+				// 弾を登録
+				bullets_.push_back(std::move(newBullet));
+			}
+
+			shotTimer = 12;
+		}	
+	}
+	else
+	{
+		shotTimer = 12;
 	}
 }
 
@@ -156,10 +392,11 @@ void Player::OnCollision()
 
 void Player::Update()
 {
-	Player::DeleteBullet();
+	
 	Player::Rotate();
 	Player::Move();
 	Player::Attack();
+	Player::ChangeBoost();
 
 	// 弾更新
 	for (std::unique_ptr<PlayerBullet>& bullet : bullets_) {
