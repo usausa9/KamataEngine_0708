@@ -13,7 +13,7 @@
 // 自機クラスの前方宣言
 class Player;
 
-class Enemy2
+class Enemy4
 {
 public:
 	//// Timer
@@ -50,6 +50,8 @@ public:
 	const std::list<std::unique_ptr<EnemyBullet>>& GetBullets() { return bullets_; };
 
 	float radius = 20.0f;
+
+	int timer = 20;
 
 	// デスフラグ
 	bool isDead_ = false;
@@ -99,6 +101,7 @@ private:
 	// 自キャラ
 	Player* player_ = nullptr;
 
+	
 
 	//private:
 	//	// メンバ関数ポインタ

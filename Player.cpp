@@ -3,7 +3,7 @@
 #include "MathUtility.h"
 using namespace MathUtility;
 
-void Player::Initialize(Model* model,Model* model2, uint32_t textureHandle)
+void Player::Initialize(Model* model,Model* model2,Model* model3,uint32_t textureHandle)
 {
 	// NULLÉ`ÉFÉbÉN
 	assert(model);
@@ -12,7 +12,11 @@ void Player::Initialize(Model* model,Model* model2, uint32_t textureHandle)
 	// ÉtÉ@ÉCÉãñºÇéwíËÇµÇƒÉeÉNÉXÉ`ÉÉÇì«Ç›çûÇﬁ
 	model_ = model;
 	bulletModel_ = model2;
+	optionModel_ = model3;
 	textureHandle_ = textureHandle;
+
+	// ÉeÉNÉXÉ`ÉÉì«Ç›çûÇ›
+	optionTextureHandle_ = TextureManager::Load("Option.png");
 
 	// ÉVÉìÉOÉãÉgÉìÉCÉìÉXÉ^ÉìÉXÇéÊìæÇ∑ÇÈ
 	input_ = Input::GetInstance();
@@ -20,12 +24,30 @@ void Player::Initialize(Model* model,Model* model2, uint32_t textureHandle)
 	debugText_ = DebugText::GetInstance();
 
 	// ÉèÅ[ÉãÉhïœä∑ÇÃèâä˙âª
-	worldTransform_.Initialize();
+	worldTransform_[0].Initialize();
 
-	matrix_.ScaleChange(worldTransform_, 0.3f, 0.3f, 0.3f, 1);
-	matrix_.RotaChange(worldTransform_, 0, 90.0f * MathUtility::PI / 180.0f, 0);
-	matrix_.ChangeTranslation(worldTransform_, 144.0f, 360.0f, 0);
-	matrix_.UpdateMatrix(worldTransform_);
+	worldTransform_[1].Initialize();
+	worldTransform_[1].translation_ = { 0,50.0f,0 };
+	worldTransform_[1].parent_ = &worldTransform_[0];
+
+	worldTransform_[2].Initialize();
+	worldTransform_[2].translation_ = { 0,-50.0f,0 };
+	worldTransform_[2].parent_ = &worldTransform_[0];
+
+	matrix_.ScaleChange(worldTransform_[0], 0.3f, 0.3f, 0.3f, 1);
+	matrix_.RotaChange(worldTransform_[0], 0, 90.0f * MathUtility::PI / 180.0f, 0);
+	matrix_.ChangeTranslation(worldTransform_[0], 144.0f, 360.0f, 0);
+	matrix_.UpdateMatrix(worldTransform_[0]);
+
+	matrix_.ScaleChange(worldTransform_[1], 100.3f, 100.3f, 100.3f, 1);
+	matrix_.RotaChange(worldTransform_[1], 0, 90.0f * MathUtility::PI / 180.0f, 0);
+	matrix_.ChangeTranslation(worldTransform_[1], 144.0f, 360.0f, 0);
+	matrix_.UpdateMatrix(worldTransform_[1]);
+
+	matrix_.ScaleChange(worldTransform_[2], 100.3f, 100.3f, 100.3f, 1);
+	matrix_.RotaChange(worldTransform_[2], 0, 90.0f * MathUtility::PI / 180.0f, 0);
+	matrix_.ChangeTranslation(worldTransform_[2], 144.0f, 360.0f, 0);
+	matrix_.UpdateMatrix(worldTransform_[2]);
 }
 
 void Player::Rotate()
@@ -41,7 +63,7 @@ void Player::Rotate()
 	else if (input_->PushKey(DIK_RIGHT)) {
 		
 	}
-	//worldTransform_.rotation_ += rotate;
+	//worldTransform_[0].rotation_ += rotate;
 }
 
 void Player::Move()
@@ -78,35 +100,35 @@ void Player::Move()
 	if (input_->PushKey(DIK_W)) {
 		move.y = kMoveSpd;
 
-		if (worldTransform_.rotation_.z <= 0.5f)
+		if (worldTransform_[0].rotation_.z <= 0.5f)
 		{
-			worldTransform_.rotation_.z += 0.05f;
+			worldTransform_[0].rotation_.z += 0.05f;
 		}
 		
 	}
 	else if (input_->PushKey(DIK_S)) {
 		move.y = -kMoveSpd; 
-		if (worldTransform_.rotation_.z >= -0.5f)
+		if (worldTransform_[0].rotation_.z >= -0.5f)
 		{
-			worldTransform_.rotation_.z -= 0.05f;
+			worldTransform_[0].rotation_.z -= 0.05f;
 		}
 	}
-	else if (worldTransform_.rotation_.z != 0.0f)
+	else if (worldTransform_[0].rotation_.z != 0.0f)
 	{
-		if (worldTransform_.rotation_.z <= -0.05f && worldTransform_.rotation_.z >= -0.05f)
+		if (worldTransform_[0].rotation_.z <= -0.05f && worldTransform_[0].rotation_.z >= -0.05f)
 		{
-			worldTransform_.rotation_.z = 0.0f;
+			worldTransform_[0].rotation_.z = 0.0f;
 		}
-		else if (worldTransform_.rotation_.z < -0.05f)
+		else if (worldTransform_[0].rotation_.z < -0.05f)
 		{
-			worldTransform_.rotation_.z += 0.03f;
+			worldTransform_[0].rotation_.z += 0.03f;
 		}
-		else if (worldTransform_.rotation_.z > 0.05f)
+		else if (worldTransform_[0].rotation_.z > 0.05f)
 		{
-			worldTransform_.rotation_.z -= 0.03f;
+			worldTransform_[0].rotation_.z -= 0.03f;
 		}	
 	}
-	else if (worldTransform_.rotation_.z = 0.0f)
+	else if (worldTransform_[0].rotation_.z = 0.0f)
 	{
 
 	}
@@ -114,63 +136,65 @@ void Player::Move()
 	if (pad_.GetLStick().y < 0) {
 		pad_.GetLStick().y * kMoveSpd;
 
-		if (worldTransform_.rotation_.z <= 0.5f)
+		if (worldTransform_[0].rotation_.z <= 0.5f)
 		{
-			worldTransform_.rotation_.z += 0.05f;
+			worldTransform_[0].rotation_.z += 0.05f;
 		}
 
 	}
 	else if (pad_.GetLStick().y > 0) {
 		pad_.GetLStick().y* kMoveSpd;
-		if (worldTransform_.rotation_.z >= -0.5f)
+		if (worldTransform_[0].rotation_.z >= -0.5f)
 		{
-			worldTransform_.rotation_.z -= 0.05f;
+			worldTransform_[0].rotation_.z -= 0.05f;
 		}
 	}
-	else if (worldTransform_.rotation_.z != 0.0f)
+	else if (worldTransform_[0].rotation_.z != 0.0f)
 	{
-		if (worldTransform_.rotation_.z <= -0.05f && worldTransform_.rotation_.z >= -0.05f)
+		if (worldTransform_[0].rotation_.z <= -0.05f && worldTransform_[0].rotation_.z >= -0.05f)
 		{
-			worldTransform_.rotation_.z = 0.0f;
+			worldTransform_[0].rotation_.z = 0.0f;
 		}
-		else if (worldTransform_.rotation_.z < -0.05f)
+		else if (worldTransform_[0].rotation_.z < -0.05f)
 		{
-			worldTransform_.rotation_.z += 0.03f;
+			worldTransform_[0].rotation_.z += 0.03f;
 		}
-		else if (worldTransform_.rotation_.z > 0.05f)
+		else if (worldTransform_[0].rotation_.z > 0.05f)
 		{
-			worldTransform_.rotation_.z -= 0.03f;
+			worldTransform_[0].rotation_.z -= 0.03f;
 		}
 	}
-	else if (worldTransform_.rotation_.z = 0.0f)
+	else if (worldTransform_[0].rotation_.z = 0.0f)
 	{
 
 	}
 
-	worldTransform_.translation_ += move;
+	worldTransform_[0].translation_ += move;
 
 	// à⁄ìÆå¿äE
 	const float kMoveLimitX = 790.0f;
 	const float kMoveLimitY = 635.0f;
 
 	// îÕàÕÇí¥Ç¶Ç»Ç¢èàóù
-	worldTransform_.translation_.x = max(worldTransform_.translation_.x, 75);
-	worldTransform_.translation_.x = min(worldTransform_.translation_.x, kMoveLimitX);
-	worldTransform_.translation_.y = max(worldTransform_.translation_.y, 100);
-	worldTransform_.translation_.y = min(worldTransform_.translation_.y, kMoveLimitY);
+	worldTransform_[0].translation_.x = max(worldTransform_[0].translation_.x, 75);
+	worldTransform_[0].translation_.x = min(worldTransform_[0].translation_.x, kMoveLimitX);
+	worldTransform_[0].translation_.y = max(worldTransform_[0].translation_.y, 100);
+	worldTransform_[0].translation_.y = min(worldTransform_[0].translation_.y, kMoveLimitY);
 }
 
 void Player::ChangeBoost()
 {
-	if (pad_.IsButtonTrigger(XINPUT_GAMEPAD_Y))
+	if (getBoost == true)
 	{
 		if (boostSelect != _NONE)
 		{
 			boostSelect++;
+			getBoost = false;
 		}
 		else
 		{
 			boostSelect = SPEEDUP;
+			getBoost = false;
 		}
 	}
 
@@ -313,60 +337,128 @@ void Player::Attack()
 	if (input_->PushKey(DIK_SPACE) || pad_.IsButtonDown(XINPUT_GAMEPAD_A))
 	{
 		shotTimer--;
-		if( shotTimer == 0 || input_->TriggerKey(DIK_SPACE) || pad_.IsButtonTrigger(XINPUT_GAMEPAD_A))
+
+		if (shotTimer == 0 || input_->TriggerKey(DIK_SPACE) || pad_.IsButtonTrigger(XINPUT_GAMEPAD_A))
 		{
 			// íeÇÃë¨ìx
 			const float kBulletSpeed = 15.0f;
 			Vector3 velocity(kBulletSpeed, 0, 0);
 
-			Vector3 velocity2(kBulletSpeed, kBulletSpeed/2, 0);
+			Vector3 velocity2(kBulletSpeed, kBulletSpeed / 2, 0);
 
-			Vector3 velocity3(7.5f, -6.7f, 0);
+			Vector3 velocity3(2.5f, -6.7f, 0);
 
 			//// ë¨ìxÉxÉNÉgÉãÇé©ã@ÇÃå¸Ç´Ç…çáÇÌÇπÇƒâÒì]Ç≥ÇπÇÈ
-			//velocity = Vector3MultiMatrix4(velocity, worldTransform_.matWorld_);
+			//velocity = Vector3MultiMatrix4(velocity, worldTransform_[0].matWorld_);
 
-			Vector3 bulletPrefab = { worldTransform_.translation_.x + 45.0f,worldTransform_.translation_.y + 2.0f,worldTransform_.translation_.z };
+			Vector3 bulletPrefab = { worldTransform_[0].translation_.x + 45.0f,worldTransform_[0].translation_.y + 2.0f,worldTransform_[0].translation_.z };
+			Vector3 bulletPrefab2 = { worldTransform_[0].translation_.x + 45.0f,worldTransform_[0].translation_.y + 52.0f,worldTransform_[0].translation_.z };
+			Vector3 bulletPrefab3 = { worldTransform_[0].translation_.x + 45.0f,worldTransform_[0].translation_.y - 48.0f,worldTransform_[0].translation_.z };
+
+			Vector3 bulletPrefab4 = { worldTransform_[0].translation_.x + 145.0f,worldTransform_[0].translation_.y + 52.0f,worldTransform_[0].translation_.z };
+			Vector3 bulletPrefab5 = { worldTransform_[0].translation_.x + 145.0f,worldTransform_[0].translation_.y - 48.0f,worldTransform_[0].translation_.z };
+
 			// íeê∂ê¨ÅAèâä˙âª
 
-			if (boost[LASER] == NONE || boost[LASER] == SELECT)
+			
+			std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
+			newBullet->Initialize(bulletModel_, bulletPrefab, 20.0f, velocity);
+			// íeÇìoò^
+			bullets_.push_back(std::move(newBullet));
+
+			if (boost[OPTION] == USED || boost[OPTION] == USEDSELECT)
 			{
+				// íeê∂ê¨ÅAèâä˙âª
 				std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
-				newBullet->Initialize(bulletModel_, bulletPrefab, velocity);
+				newBullet->Initialize(bulletModel_, bulletPrefab2, 20.0f, velocity);
+
 				// íeÇìoò^
 				bullets_.push_back(std::move(newBullet));
-			}
-			else if(boost[LASER] == USED || boost[LASER] == USEDSELECT)
-			{
 
+				// íeê∂ê¨ÅAèâä˙âª
+				std::unique_ptr<PlayerBullet> newBullet2 = std::make_unique<PlayerBullet>();
+				newBullet2->Initialize(bulletModel_, bulletPrefab3, 20.0f, velocity);
+
+				// íeÇìoò^
+				bullets_.push_back(std::move(newBullet2));
 			}
 
 			if (boost[DOUBLE] == USED || boost[DOUBLE] == USEDSELECT)
 			{
 				// íeê∂ê¨ÅAèâä˙âª
 				std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
-				newBullet->Initialize(bulletModel_, bulletPrefab, velocity2);
+				newBullet->Initialize(bulletModel_, bulletPrefab, 20.0f, velocity2);
 
 				// íeÇìoò^
 				bullets_.push_back(std::move(newBullet));
+
+				if (boost[OPTION] == USED || boost[OPTION] == USEDSELECT)
+				{
+					// íeê∂ê¨ÅAèâä˙âª
+					std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
+					newBullet->Initialize(bulletModel_, bulletPrefab2, 20.0f, velocity2);
+
+					// íeÇìoò^
+					bullets_.push_back(std::move(newBullet));
+
+					// íeê∂ê¨ÅAèâä˙âª
+					std::unique_ptr<PlayerBullet> newBullet2 = std::make_unique<PlayerBullet>();
+					newBullet2->Initialize(bulletModel_, bulletPrefab3, 20.0f, velocity2);
+
+					// íeÇìoò^
+					bullets_.push_back(std::move(newBullet2));
+				}
 			}
 
 			if (boost[MISSILE] == USED || boost[MISSILE] == USEDSELECT)
 			{
 				// íeê∂ê¨ÅAèâä˙âª
 				std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
-				newBullet->Initialize(bulletModel_, bulletPrefab, velocity3);
+				newBullet->Initialize(bulletModel_, bulletPrefab, 20.0f, velocity3);
 
 				// íeÇìoò^
 				bullets_.push_back(std::move(newBullet));
+
+				if (boost[OPTION] == USED || boost[OPTION] == USEDSELECT)
+				{
+					// íeê∂ê¨ÅAèâä˙âª
+					std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
+					newBullet->Initialize(bulletModel_, bulletPrefab2, 20.0f, velocity3);
+
+					// íeÇìoò^
+					bullets_.push_back(std::move(newBullet));
+
+					// íeê∂ê¨ÅAèâä˙âª
+					std::unique_ptr<PlayerBullet> newBullet2 = std::make_unique<PlayerBullet>();
+					newBullet2->Initialize(bulletModel_, bulletPrefab3, 20.0f, velocity3);
+
+					// íeÇìoò^
+					bullets_.push_back(std::move(newBullet2));
+				}
 			}
 
-			shotTimer = 12;
-		}	
+			if (boost[LASER] == USED || boost[LASER] == USEDSELECT)
+			{
+				shotTimer = fastTimer;
+			}
+			else if (boost[LASER] == NONE || boost[LASER] == SELECT)
+			{
+				shotTimer = lateTimer;
+			}
+		}
+
+
 	}
 	else
 	{
-		shotTimer = 12;
+		if (boost[LASER] == USED || boost[LASER] == USEDSELECT)
+		{
+			shotTimer = fastTimer;
+		}
+		else if (boost[LASER] == NONE || boost[LASER] == SELECT)
+		{
+			shotTimer = lateTimer;
+		}
 	}
 }
 
@@ -382,7 +474,7 @@ Vector3 Player::GetWorldPosition()
 {
 	Vector3 worldPos;
 	// ÉèÅ[ÉãÉhçsóÒÇÃïΩçsà⁄ìÆê¨ï™ÇéÊìæ
-	worldPos = worldTransform_.translation_;
+	worldPos = worldTransform_[0].translation_;
 	return worldPos;
 }
 
@@ -403,19 +495,37 @@ void Player::Update()
 		bullet->Update();
 	}
 
-	matrix_.UpdateMatrix(worldTransform_);
+	matrix_.UpdateMatrix(worldTransform_[0]);
 }
 
 void Player::Draw(ViewProjection viewProjection)
 {
-	model_->Draw(worldTransform_, viewProjection);
+	model_->Draw(worldTransform_[0], viewProjection);
+
+	if (boost[OPTION] == USED || boost[OPTION] == USEDSELECT)
+	{
+		optionModel_->Draw(worldTransform_[1], viewProjection, optionTextureHandle_);
+		optionModel_->Draw(worldTransform_[2], viewProjection, optionTextureHandle_);
+	}
 
 	// íeï`âÊ
 	for (std::unique_ptr<PlayerBullet>&bullet : bullets_) {
 		bullet->Draw(viewProjection);
 	}
 
-	debugText_->SetPos(50, 130);
+	/*debugText_->SetPos(50, 130);
 	debugText_->Printf(
-		"pos:%f,%f,%f", worldTransform_.translation_.x, worldTransform_.translation_.y, worldTransform_.translation_.z);
+		"pos:%f,%f,%f", worldTransform_[0].translation_.x, worldTransform_[0].translation_.y, worldTransform_[0].translation_.z);*/
+}
+
+void Player::Reset()
+{
+	boostSelect = 5;
+	boost[0] = { 0 };
+	boost[1] = { 0 };
+	boost[2] = { 0 };
+	boost[3] = { 0 };
+	boost[4] = { 0 };
+
+	shotTimer = 12;
 }

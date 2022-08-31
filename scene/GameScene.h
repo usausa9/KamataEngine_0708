@@ -20,6 +20,9 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Enemy2.h"
+#include "Enemy3.h"
+#include "Enemy4.h"
+
 #include "PadInput.h"
 
 #include "Collision.h"
@@ -45,6 +48,13 @@ public: // メンバ変数
 		kNumPartId
 	};
 
+	enum Scene {
+		MENU,
+		PLAY,
+		GAMECLEAR,
+		GAMEOVER
+	};
+
 
   public: // メンバ関数
 	/// <summary>
@@ -57,15 +67,22 @@ public: // メンバ変数
 	/// </summary>
 	~GameScene();
 
+	void GameReset();
+
 	/// <summary>
 	/// 敵の発生データの読み込み
 	/// </summary>
 	void LoadEnemyPopData();
 
+
 	/// <summary>
 	/// 敵の発生コマンドの更新
 	/// </summary>
 	void UpdateEnemyPopCommands();
+
+	void UpdateScene();
+
+	
 
 	/// <summary>
 	/// 初期化
@@ -83,6 +100,9 @@ public: // メンバ変数
 	void Draw();
 
 	void CheckAllCollisions(Player* player, Enemy* enemy);
+	void CheckAllCollisions2(Player* player, Enemy2* enemy);
+	void CheckAllCollisions3(Player* player, Enemy3* enemy);
+	void CheckAllCollisions4(Player* player, Enemy4* enemy);
 
   private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
@@ -95,11 +115,19 @@ public: // メンバ変数
 	// テクスチャハンドル
 	uint32_t textureHandle_ = 0;
 	uint32_t bulletModelTextureHandle_ = 0;
+	uint32_t optionTextureHandle_ = 0;
 	uint32_t backGroundTextureHandle_ = 0;
 	uint32_t groundTextureHandle_ = 0;
+	uint32_t groundUseTextureHandle_ = 0;
+
+	uint32_t menuTextureHandle_ = 0;
+	uint32_t gameOverTextureHandle_ = 0;
+	uint32_t gameClearTextureHandle_ = 0;
 
 	uint32_t enemy1TextureHandle_ = 0;
 	uint32_t enemy2TextureHandle_ = 0;
+	uint32_t enemy3TextureHandle_ = 0;
+	uint32_t enemy4TextureHandle_ = 0;
 
 	uint32_t blueBer1TH = 0;
 	uint32_t blueBer2TH = 0;
@@ -117,12 +145,20 @@ public: // メンバ変数
 
 	// 3Dモデル.スプライト
 	Model* model_ = nullptr;
+	Model* optionModel_ = nullptr;
 	Model* bulletModel_ = nullptr;
 	Model* enemy1Model_ = nullptr;
 	Model* enemy2Model_ = nullptr;
+	Model* enemy3Model_ = nullptr;
+	Model* enemy4Model_ = nullptr;
+
+	Sprite* gameClearSprite_ = nullptr;
+	Sprite* gameOverSprite_ = nullptr;
+	Sprite* menuSprite_ = nullptr;
 
 	Sprite* backGroundSprite_ = nullptr;
 	Sprite* groundSprite_ = nullptr;
+	Sprite* groundUseSprite_ = nullptr;
 
 	Sprite* blueBer1Sprite_ = nullptr;
 	Sprite* blueBer2Sprite_ = nullptr;
@@ -160,9 +196,11 @@ public: // メンバ変数
 
 	std::list<std::unique_ptr<Enemy>> enemys_;
 	std::list<std::unique_ptr<Enemy2>> enemys2_;
+	std::list<std::unique_ptr<Enemy3>> enemys3_;
+	std::list<std::unique_ptr<Enemy4>> enemys4_;
 
 	// 敵の位置
-	Vector3 enemyPos{ 300,300,0 };
+	Vector3 enemyPos{ -300,1000300,0 };
 
 	// スクロール変換
 	Vector2 backGroundPos{ 0,0 };
@@ -170,6 +208,11 @@ public: // メンバ変数
 
 	// 敵発生コマンド
 	std::stringstream enemyPopCommands;
+
+	int scene = MENU;
+	bool isClear = false;
+
+	bool isDeadPlayer = false;
 
 	// 待機中フラグ
 	bool isWait = false;

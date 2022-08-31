@@ -13,7 +13,7 @@
 // 自機クラスの前方宣言
 class Player;
 
-class Enemy2
+class Enemy3
 {
 public:
 	//// Timer
@@ -30,6 +30,8 @@ public:
 	void DeleteBullet();
 
 	void Fire();
+
+	
 
 	Vector3 GetWorldPosition();
 
@@ -53,6 +55,7 @@ public:
 
 	// デスフラグ
 	bool isDead_ = false;
+
 private:
 
 	// モデル

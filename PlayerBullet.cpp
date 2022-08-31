@@ -1,6 +1,6 @@
 #include "PlayerBullet.h"
 
-void PlayerBullet::Initialize(Model* model, const Vector3& position, const Vector3& velocity)
+void PlayerBullet::Initialize(Model* model, const Vector3& position,float xSize, const Vector3& velocity)
 {
 	// NULLチェック
 	assert(model);
@@ -14,6 +14,8 @@ void PlayerBullet::Initialize(Model* model, const Vector3& position, const Vecto
 	// ワールドトランスフォーム初期化
 	worldTransform_.Initialize();
 
+	matrix_.ScaleChange(worldTransform_, xSize, 20.0f, 20.0f, 1);
+
 	// 引数で受け取った初期座標のセット
 	worldTransform_.translation_ = position;
 
@@ -23,7 +25,6 @@ void PlayerBullet::Initialize(Model* model, const Vector3& position, const Vecto
 
 void PlayerBullet::Update()
 {
-	matrix_.ScaleChange(worldTransform_, 20.0f, 20.0f, 20.0f, 1);
 	matrix_.RotaChange(worldTransform_, 0, 0, 0);
 
 	// 座標を移動させる

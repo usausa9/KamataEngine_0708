@@ -1,7 +1,9 @@
 #include "Player.h"
-#include "Enemy.h"
+#include "Enemy3.h"
+//#include "MathUtility.h"
+//using namespace MathUtility;
 
-void Enemy::Initialize(Model* model, uint32_t textureHandle, const Vector3& position)
+void Enemy3::Initialize(Model* model, uint32_t textureHandle, const Vector3& position)
 {
 	// NULLポインタチェック
 	assert(model);
@@ -18,10 +20,8 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle, const Vector3& posi
 	// 初期座標に移動
 	worldTransform_.translation_ = position;
 
-	velocity_ = {  -5.0f,0,0 };
-	velocity2_ = { +5.0f,-5.0f,0 };
-	velocity3_ = { +5.0f,5.0f,0 };
-	velocity4_ = { +10.0f,0,0 };
+	velocity_ = { -4.0f,-1.5f,0 };
+	velocity2_ = { -4.0f,1.5f,0 };
 
 	//Phese_FireIni();
 
@@ -35,37 +35,38 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle, const Vector3& posi
 	matrix_.UpdateMatrix(worldTransform_);
 }
 
-void Enemy::DeleteBullet()
+void Enemy3::DeleteBullet()
 {
 	// デスフラグの立った弾を削除
 	bullets_.remove_if([](std::unique_ptr<EnemyBullet>& bullet) {
 		return bullet->IsDead();
-	});
+		});
 }
 
-Vector3 Enemy::GetWorldPosition()
+Vector3 Enemy3::GetWorldPosition()
 {
 	Vector3 worldPos;
 	worldPos = worldTransform_.translation_;
 	return worldPos;
 }
 
-void Enemy::Fire()
+void Enemy3::Fire()
 {
 	assert(player_);
 
 	// 弾の速度
 	const float kBulletSpped = 1.0f;
 
+
 	// 差分ベクトルを格納する変数
 	Vector3 diffVec;
 
 	// 自キャラ、敵キャラのワールド座標を取得
 	Vector3 playerPos = player_->GetWorldPosition();
-	Vector3 enemyPos = worldTransform_.translation_;
+	Vector3 Enemy3Pos = worldTransform_.translation_;
 
 	// 差分ベクトルを求める
-	diffVec = playerPos - enemyPos;
+	diffVec = playerPos - Enemy3Pos;
 
 	// 差分ベクトルの正規化
 	diffVec.normalize();
@@ -74,59 +75,43 @@ void Enemy::Fire()
 	diffVec *= kBulletSpped;
 
 	//// 弾を生成し、初期化
-	//std::unique_ptr<EnemyBullet> newBullet = std::make_unique<EnemyBullet>();
+	//std::unique_ptr<Enemy3Bullet> newBullet = std::make_unique<Enemy3Bullet>();
 	//newBullet->Initialize(model_, worldTransform_.translation_, diffVec);
 	//// 弾を登録する
 	//bullets_.push_back(std::move(newBullet));
 }
 
-void Enemy::Update()
+void Enemy3::Update()
 {
-	Enemy::DeleteBullet();
-	//Enemy::Fire();
+	Enemy3::DeleteBullet();
+	//Enemy3::Fire();
 
 	Vector3 playerPos = player_->GetWorldPosition();
 
-	if (worldTransform_.translation_.x <= 300 && phase == 0)
+	if (worldTransform_.translation_.y <= playerPos.y && phase == 0)
 	{
-		if (worldTransform_.translation_.y >= 400)
-		{
-			phase = 1;
-		}
-		else
-		{
-			phase = 2;
-		}
+		phase = 1;
+	}
+	if (worldTransform_.translation_.y >= playerPos.y && phase == 1)
+	{
+		phase = 0;
 	}
 
-	if (playerPos.y >= worldTransform_.translation_.y && phase == 1)
-	{
-		phase = 3;
-	}
-	if (playerPos.y <= worldTransform_.translation_.y && phase == 2)
-	{
-		phase = 3;
-	}
 
 	if (phase == 0)
-	{ 
+	{
 		// 速度分移動
 		worldTransform_.translation_ += velocity_;
+
+		matrix_.RotaChange(worldTransform_, 0, 0, 90.0f * MathUtility::PI / 180.0f);
+		matrix_.UpdateMatrix(worldTransform_);
 	}
 	else if (phase == 1)
 	{
 		// 速度分移動
 		worldTransform_.translation_ += velocity2_;
-	}
-	else if (phase == 2)
-	{
-		// 速度分移動
-		worldTransform_.translation_ += velocity3_;
-	}
-	else if (phase == 3)
-	{
-		// 速度分移動
-		worldTransform_.translation_ += velocity4_;
+		matrix_.RotaChange(worldTransform_, 0 ,0, 0);
+		matrix_.UpdateMatrix(worldTransform_);
 	}
 
 	// 範囲を超えない処理
@@ -157,7 +142,7 @@ void Enemy::Update()
 	matrix_.UpdateMatrix(worldTransform_);
 }
 
-void Enemy::Draw(const ViewProjection& viewProjection)
+void Enemy3::Draw(const ViewProjection& viewProjection)
 {
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
 
@@ -167,17 +152,17 @@ void Enemy::Draw(const ViewProjection& viewProjection)
 	}
 }
 
-void Enemy::OnCollision()
+void Enemy3::OnCollision()
 {
 	isDead_ = true;
 }
 
-//void Enemy::Phese_FireIni()
+//void Enemy3::Phese_FireIni()
 //{
 //	fireCoolTime = kFireInterval;
 //}
 //
-//void Enemy::Phase_Approach()
+//void Enemy3::Phase_Approach()
 //{
 //	velocity_ = { 0,0,0 };
 //
@@ -200,7 +185,7 @@ void Enemy::OnCollision()
 //	//}
 //}
 //
-//void Enemy::Phase_Leave()
+//void Enemy3::Phase_Leave()
 //{
 //	velocity_ = { 0.3f,0,0 };
 //
@@ -208,7 +193,7 @@ void Enemy::OnCollision()
 //	worldTransform_.translation_ -= velocity_;
 //}
 //
-//void (Enemy::* Enemy::spFuncTable[])() = {
-//	&Enemy::Phase_Approach,
-//	&Enemy::Phase_Leave
+//void (Enemy3::* Enemy3::spFuncTable[])() = {
+//	&Enemy3::Phase_Approach,
+//	&Enemy3::Phase_Leave
 //};

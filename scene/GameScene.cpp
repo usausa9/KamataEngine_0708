@@ -11,14 +11,22 @@ GameScene::GameScene() {}
 GameScene::~GameScene() {
 
 	delete model_;
+	delete optionModel_;
 	delete bulletModel_;
 	delete enemy1Model_;
 	delete enemy2Model_;
+	delete enemy3Model_;
+	delete enemy4Model_;
 	delete backGroundSprite_;
 	delete groundSprite_;
+	delete groundUseSprite_;
 	delete debugCamera_;
 	delete player_;
 	delete enemy_;
+
+	delete gameClearSprite_;
+	delete gameOverSprite_;
+	delete menuSprite_;
 
 	delete blueBer1Sprite_;
 	delete blueBer2Sprite_;
@@ -40,7 +48,6 @@ GameScene::~GameScene() {
 	delete orange7Sprite_[2];
 	delete orange7Sprite_[3];
 	delete orange7Sprite_[4];
-
 }
 
 void GameScene::Initialize() {
@@ -56,11 +63,19 @@ void GameScene::Initialize() {
 	textureHandle_ = TextureManager::Load("tex.jpg");
 
 	enemy1TextureHandle_ = TextureManager::Load("Enemy1.png");
-	enemy2TextureHandle_ = TextureManager::Load("Enemy2.png");
+	//enemy2TextureHandle_ = TextureManager::Load("Enemy2.png");
+	enemy3TextureHandle_ = TextureManager::Load("Enemy3.png");
+	enemy4TextureHandle_ = TextureManager::Load("Enemy4.png");
 
 	bulletModelTextureHandle_ = TextureManager::Load("Bullet.png");
+	optionTextureHandle_ = TextureManager::Load("Option.png");
 	backGroundTextureHandle_ = TextureManager::Load("backGround.png");
 	groundTextureHandle_ = TextureManager::Load("Ground.png");
+	groundUseTextureHandle_ = TextureManager::Load("GroundUSE.png");
+
+	menuTextureHandle_ = TextureManager::Load("Start.png");
+	gameClearTextureHandle_ = TextureManager::Load("GameClear.png");
+	gameOverTextureHandle_ = TextureManager::Load("Gameover.png");
 
 	blueBer1TH = TextureManager::Load("blue1.png");
 	blueBer2TH = TextureManager::Load("blue2.png");
@@ -79,11 +94,19 @@ void GameScene::Initialize() {
 	// 3Dモデル.スプライトの生成
 	model_ = Model::CreateFromOBJ("vicviper");
 	bulletModel_ = Model::Create();
+	optionModel_ = Model::Create();
 	enemy1Model_ = Model::Create();
 	enemy2Model_ = Model::Create();
+	enemy3Model_ = Model::Create();
+	enemy4Model_ = Model::Create();
 
 	backGroundSprite_ = Sprite::Create(backGroundTextureHandle_, { 0,0 });
 	groundSprite_ = Sprite::Create(groundTextureHandle_, { 0,0 });
+	groundUseSprite_ = Sprite::Create(groundUseTextureHandle_, { 0,0 });
+
+	gameClearSprite_ = Sprite::Create(gameClearTextureHandle_, { 0,0 });
+	gameOverSprite_ = Sprite::Create(gameOverTextureHandle_, { 0,0 });
+	menuSprite_ = Sprite::Create(menuTextureHandle_, { 0,0 });
 
 	blueBer1Sprite_ = Sprite::Create(blueBer1TH, { 195,600 });
 	blueBer2Sprite_ = Sprite::Create(blueBer2TH, { 295,600 });
@@ -109,11 +132,10 @@ void GameScene::Initialize() {
 	orange7Sprite_[3] = Sprite::Create(orangeBer7TH, { 495,600 });
 	orange7Sprite_[4] = Sprite::Create(orangeBer7TH, { 595,600 });
 
-
 	// 自キャラの生成
 	player_ = new Player();
 	// 自キャラの初期化
-	player_->Initialize(model_, bulletModel_, textureHandle_);
+	player_->Initialize(model_, bulletModel_, optionModel_,textureHandle_);
 
 	// 敵キャラを生成
 	enemy_ = new Enemy();
@@ -166,6 +188,27 @@ void GameScene::Initialize() {
 void GameScene::Update() {
 
 	pad_.Update();
+
+	// デスフラグの立っを削除
+	enemys_.remove_if([](std::unique_ptr<Enemy>& _enemy) {
+		return _enemy->IsDead();
+	});
+
+	// デスフラグの立った弾を削除
+	enemys2_.remove_if([](std::unique_ptr<Enemy2>& _enemy) {
+		return _enemy->IsDead();
+	});
+
+	// デスフラグの立った弾を削除
+	enemys3_.remove_if([](std::unique_ptr<Enemy3>& _enemy) {
+		return _enemy->IsDead();
+	});
+
+
+	// デスフラグの立った弾を削除
+	enemys4_.remove_if([](std::unique_ptr<Enemy4>& _enemy) {
+		return _enemy->IsDead();
+	});
 
 #ifdef _DEBUG
 
@@ -342,34 +385,86 @@ void GameScene::Update() {
 		viewProjection_.TransferMatrix();
 	}
 
+	UpdateScene();
 
-	// 自キャラの更新
-	player_->Update();
+	if (scene == PLAY)
+	{
+		// 自キャラの更新
+		player_->Update();
 
-	// 敵更新
-	for (std::unique_ptr<Enemy>& enemy : enemys_) {
-		enemy->Update();
-		CheckAllCollisions(player_, enemy.get());
+		// 敵更新
+		for (std::unique_ptr<Enemy>& enemy : enemys_) {
+			enemy->Update();
+			CheckAllCollisions(player_, enemy.get());
+		}
+		
+		for (std::unique_ptr<Enemy2>& enemy : enemys2_) {
+			enemy->Update();
+			CheckAllCollisions2(player_, enemy.get());
+		}
+
+		for (std::unique_ptr<Enemy3>& enemy : enemys3_) {
+			enemy->Update();
+			CheckAllCollisions3(player_, enemy.get());
+		}
+
+		for (std::unique_ptr<Enemy4>& enemy : enemys4_) {
+			enemy->Update();
+			CheckAllCollisions4(player_, enemy.get());
+		}
+
+		if (enemy_) {
+			enemy_->Update();
+		}
+
+		//CheckAllCollisions(player_,enemy_);
+
+		backGroundPos += backGroundVelocity;
+
+		if (backGroundPos.x <= -896.0f)
+		{
+			backGroundPos.x = -2.0f;
+		}
+
+		backGroundSprite_->SetPosition(backGroundPos);
 	}
+	else
+	{
+		player_->Reset();
 
-	if (enemy_) {
-		enemy_->Update();
+		GameReset();
+
+		for (std::unique_ptr<Enemy>& enemy : enemys_) {
+			enemy->isDead_ = true;
+		}
+
+		for (std::unique_ptr<Enemy2>& enemy : enemys2_) {
+			enemy->isDead_ = true;
+		}
+
+		for (std::unique_ptr<Enemy3>& enemy : enemys3_) {
+			enemy->isDead_ = true;
+		}
+
+		for (std::unique_ptr<Enemy4>& enemy : enemys4_) {
+			enemy->isDead_ = true;
+		}
+
+		bool isClear = false;
+
+		bool isDeadPlayer = false;
+
+		// 待機中フラグ
+		bool isWait = false;
+		// 待機タイマー
+		int waitTimer = 0;
 	}
 
 	LoadEnemyPopData();
-	UpdateEnemyPopCommands();
-
-	CheckAllCollisions(player_,enemy_);
-
-
-	backGroundPos += backGroundVelocity;
-
-	if (backGroundPos.x <= -896.0f)
+	if (scene == PLAY)
 	{
-		backGroundPos.x = -2.0f;
+		UpdateEnemyPopCommands();
 	}
-
-	backGroundSprite_->SetPosition(backGroundPos);
 }
 
 void GameScene::Draw() {
@@ -412,6 +507,18 @@ void GameScene::Draw() {
 		enemy->Draw(viewProjection_);
 	}
 
+	for (std::unique_ptr<Enemy2>& enemy : enemys2_) {
+		enemy->Draw(viewProjection_);
+	}
+
+	for (std::unique_ptr<Enemy3>& enemy : enemys3_) {
+		enemy->Draw(viewProjection_);
+	}
+
+	for (std::unique_ptr<Enemy4>& enemy : enemys4_) {
+		enemy->Draw(viewProjection_);
+	}
+
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
 #pragma endregion
@@ -424,95 +531,114 @@ void GameScene::Draw() {
 	/// ここに前景スプライトの描画処理を追加できる
 	/// </summary>
 	
-	groundSprite_->Draw();
+	if (scene == MENU)
+	{
+		menuSprite_->Draw();
+	}
+	if (scene == PLAY)
+	{
+		groundSprite_->Draw();
 
+		if (player_->boostSelect != 5)
+		{
+			groundUseSprite_->Draw();
+		}
 #pragma region UI表示
-	if (player_->boost[0] == 0)
-	{
-		blueBer1Sprite_->Draw();
-	}
-	else if (player_->boost[0] == 1)
-	{
-		orange1Sprite_->Draw();
-	}
-	else if (player_->boost[0] == 2)
-	{
-		blueBer7Sprite_[0]->Draw();
-	}
-	else if (player_->boost[0] == 3)
-	{
-		orange7Sprite_[0]->Draw();
-	}
+		if (player_->boost[0] == 0)
+		{
+			blueBer1Sprite_->Draw();
+		}
+		else if (player_->boost[0] == 1)
+		{
+			orange1Sprite_->Draw();
+		}
+		else if (player_->boost[0] == 2)
+		{
+			blueBer7Sprite_[0]->Draw();
+		}
+		else if (player_->boost[0] == 3)
+		{
+			orange7Sprite_[0]->Draw();
+		}
 
-	if (player_->boost[1] == 0)
-	{
-		blueBer2Sprite_->Draw();
-	}
-	else if (player_->boost[1] == 1)
-	{
-		orange2Sprite_->Draw();
-	}
-	else if (player_->boost[1] == 2)
-	{
-		blueBer7Sprite_[1]->Draw();
-	}
-	else if (player_->boost[1] == 3)
-	{
-		orange7Sprite_[1]->Draw();
-	}
+		if (player_->boost[1] == 0)
+		{
+			blueBer2Sprite_->Draw();
+		}
+		else if (player_->boost[1] == 1)
+		{
+			orange2Sprite_->Draw();
+		}
+		else if (player_->boost[1] == 2)
+		{
+			blueBer7Sprite_[1]->Draw();
+		}
+		else if (player_->boost[1] == 3)
+		{
+			orange7Sprite_[1]->Draw();
+		}
 
-	if (player_->boost[2] == 0)
-	{
-		blueBer3Sprite_->Draw();
-	}
-	else if (player_->boost[2] == 1)
-	{
-		orange3Sprite_->Draw();
-	}
-	else if (player_->boost[2] == 2)
-	{
-		blueBer7Sprite_[2]->Draw();
-	}
-	else if (player_->boost[2] == 3)
-	{
-		orange7Sprite_[2]->Draw();
-	}
+		if (player_->boost[2] == 0)
+		{
+			blueBer3Sprite_->Draw();
+		}
+		else if (player_->boost[2] == 1)
+		{
+			orange3Sprite_->Draw();
+		}
+		else if (player_->boost[2] == 2)
+		{
+			blueBer7Sprite_[2]->Draw();
+		}
+		else if (player_->boost[2] == 3)
+		{
+			orange7Sprite_[2]->Draw();
+		}
 
-	if (player_->boost[3] == 0)
-	{
-		blueBer4Sprite_->Draw();
-	}
-	else if (player_->boost[3] == 1)
-	{
-		orange4Sprite_->Draw();
-	}
-	else if (player_->boost[3] == 2)
-	{
-		blueBer7Sprite_[3]->Draw();
-	}
-	else if (player_->boost[3] == 3)
-	{
-		orange7Sprite_[3]->Draw();
-	}
+		if (player_->boost[3] == 0)
+		{
+			blueBer4Sprite_->Draw();
+		}
+		else if (player_->boost[3] == 1)
+		{
+			orange4Sprite_->Draw();
+		}
+		else if (player_->boost[3] == 2)
+		{
+			blueBer7Sprite_[3]->Draw();
+		}
+		else if (player_->boost[3] == 3)
+		{
+			orange7Sprite_[3]->Draw();
+		}
 
-	if (player_->boost[4] == 0)
-	{
-		blueBer5Sprite_->Draw();
-	}
-	else if (player_->boost[4] == 1)
-	{
-		orange5Sprite_->Draw();
-	}
-	else if (player_->boost[4] == 2)
-	{
-		blueBer7Sprite_[4]->Draw();
-	}
-	else if (player_->boost[4] == 3)
-	{
-		orange7Sprite_[4]->Draw();
-	}
+		if (player_->boost[4] == 0)
+		{
+			blueBer5Sprite_->Draw();
+		}
+		else if (player_->boost[4] == 1)
+		{
+			orange5Sprite_->Draw();
+		}
+		else if (player_->boost[4] == 2)
+		{
+			blueBer7Sprite_[4]->Draw();
+		}
+		else if (player_->boost[4] == 3)
+		{
+			orange7Sprite_[4]->Draw();
+		}
 
 #pragma endregion
+	}
+	if (scene == GAMEOVER)
+	{
+		gameOverSprite_->Draw();
+	}
+	if (scene == GAMECLEAR)
+	{
+		gameClearSprite_->Draw();
+	}
 
 	// デバッグテキストの描画
 	debugText_->DrawAll(commandList);
@@ -523,18 +649,77 @@ void GameScene::Draw() {
 #pragma endregion
 
 	// ライン描画が参照するビュープロジェクションを指定する (アドレス渡し)
-	
-	
+}
+
+void GameScene::GameReset()
+{
+	// ファイルを開く
+	std::ifstream file;
+
+	file.open("Resources\\enemyPop.csv");
+	assert(file.is_open());
+
+	// ファイルの内容を文字列ストリームにコピー
+	enemyPopCommands << file.rdbuf();
+
+	// 1行分の文字列を入れる変数
+	std::string line;
+
+	// コマンド実行ループ
+	while (getline(enemyPopCommands, line)) {
+		// 1行分の文字列をストリームに変換して解析しやすくする
+		std::istringstream line_stream(line);
+
+		std::string word;
+		// ,区切りで行の先頭文字列を取得
+		getline(line_stream, word, ',');
+
+		// "//"から始まる行はコメント
+		if (word.find("//") == 0) {
+			// コメント行を飛ばす
+			continue;
+		}
+
+		if (word.find("RESET") == 0)
+		{
+			break;
+		}
+	}
+
+	// ファイルを閉じる
+	file.close();
 }
 
 void GameScene::CheckAllCollisions(Player* player, Enemy* enemy)
 {
-	
 	// 自弾リストの取得
 	const std::list<std::unique_ptr<PlayerBullet>>& playerBullets = player->GetBullets();
 
 	// 敵弾リストの取得
 	const std::list<std::unique_ptr<EnemyBullet>>& enemyBullets = enemy->GetBullets();
+
+#pragma region 自キャラと敵キャラの当たり判定
+	{
+		Vector3 posA, posB;
+		posA = player_->GetWorldPosition();
+
+		for (const std::unique_ptr<Enemy>& enemy : enemys_)
+		{
+			posB = enemy->GetWorldPosition();
+
+
+			float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+			{
+				if (len <= (enemy->radius + player_->radius) * (enemy->radius + player_->radius))
+				{
+					// 自キャラの衝突時コールバックを呼び出す
+					player_->OnCollision();
+
+					isDeadPlayer = true;
+				}
+			}
+		}
+	}
 
 #pragma region 自キャラと敵弾の当たり判定
 	//// 判定対象AとBの座標
@@ -579,6 +764,364 @@ void GameScene::CheckAllCollisions(Player* player, Enemy* enemy)
 				playerBullet->OnCollision();
 			}
 
+			//posB = playerBullet->GetWorldPosition();
+
+			//float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+			//if (len <= 6.0f)
+			//{
+			//	// 自キャラの衝突時コールバックを呼び出す
+			//	enemy_->OnCollision();
+
+			//	// 敵弾の衝突時コールバックを呼び出す
+			//	playerBullet->OnCollision();
+
+			//}
+		}
+
+		player->DeleteBullet();
+	}
+#pragma endregion
+
+#pragma region 自弾と敵弾の当たり判定
+
+	//for (const std::unique_ptr<EnemyBullet>& enemyBullet : enemyBullets)
+	//{
+	//	posA = enemyBullet->GetWorldPosition();
+
+	//	for (const std::unique_ptr<PlayerBullet>& playerBullet : playerBullets)
+	//	{
+	//		posB = playerBullet->GetWorldPosition();
+
+	//		float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+	//		if (len <= 6.0f)
+	//		{
+	//			// 自キャラの衝突時コールバックを呼び出す
+	//			enemyBullet->OnCollision();
+
+	//			// 敵弾の衝突時コールバックを呼び出す
+	//			playerBullet->OnCollision();
+
+	//		}
+	//	}
+	//}
+#pragma endregion
+}
+
+void GameScene::CheckAllCollisions2(Player* player, Enemy2* enemy)
+{
+	// 自弾リストの取得
+	const std::list<std::unique_ptr<PlayerBullet>>& playerBullets = player->GetBullets();
+
+	// 敵弾リストの取得
+	const std::list<std::unique_ptr<EnemyBullet>>& enemyBullets = enemy->GetBullets();
+
+#pragma region 自キャラと敵キャラの当たり判定
+	{
+		Vector3 posA, posB;
+		posA = player_->GetWorldPosition();
+
+		for (const std::unique_ptr<Enemy2>& enemy : enemys2_)
+		{
+			posB = enemy->GetWorldPosition();
+
+
+			float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+			{
+				if (len <= (enemy->radius + player_->radius) * (enemy->radius + player_->radius))
+				{
+					// 自キャラの衝突時コールバックを呼び出す
+					player_->OnCollision();
+
+					isDeadPlayer = true;
+				}
+			}
+		}
+	}
+
+#pragma region 自キャラと敵弾の当たり判定
+	//// 判定対象AとBの座標
+	//Vector3 posA, posB;
+
+	//posA = player_->GetWorldPosition();
+
+	//for (const std::unique_ptr<EnemyBullet>& enemyBullet : enemyBullets)
+	//{
+	//	posB = enemyBullet->GetWorldPosition();
+
+	//	float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+	//	if (len <= 0.5f)
+	//	{
+	//		// 自キャラの衝突時コールバックを呼び出す
+	//		player_->OnCollision();
+
+	//		// 敵弾の衝突時コールバックを呼び出す
+	//		enemyBullet->OnCollision();
+
+	//	}
+	//}
+#pragma endregion
+
+#pragma region 自弾と敵キャラの当たり判定
+	{
+		// 判定対象AとBの座標
+		WorldTransform posA = enemy->worldTransform_;
+		Vector3 posB;
+
+		for (const std::unique_ptr<PlayerBullet>& playerBullet : playerBullets)
+		{
+			posB = playerBullet->GetWorldPosition();
+
+			if (CollisionRayToObject(posB - playerBullet->velocity_, posB, posA, playerBullet->radius + enemy->radius))
+			{
+				// 自キャラの衝突時コールバックを呼び出す
+				enemy->OnCollision();
+
+				player_->getBoost = true;
+
+				// 敵弾の衝突時コールバックを呼び出す
+				playerBullet->OnCollision();
+			}
+
+			//posB = playerBullet->GetWorldPosition();
+
+			//float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+			//if (len <= 6.0f)
+			//{
+			//	// 自キャラの衝突時コールバックを呼び出す
+			//	enemy_->OnCollision();
+
+			//	// 敵弾の衝突時コールバックを呼び出す
+			//	playerBullet->OnCollision();
+
+			//}
+		}
+
+		player->DeleteBullet();
+	}
+#pragma endregion
+
+#pragma region 自弾と敵弾の当たり判定
+
+	//for (const std::unique_ptr<EnemyBullet>& enemyBullet : enemyBullets)
+	//{
+	//	posA = enemyBullet->GetWorldPosition();
+
+	//	for (const std::unique_ptr<PlayerBullet>& playerBullet : playerBullets)
+	//	{
+	//		posB = playerBullet->GetWorldPosition();
+
+	//		float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+	//		if (len <= 6.0f)
+	//		{
+	//			// 自キャラの衝突時コールバックを呼び出す
+	//			enemyBullet->OnCollision();
+
+	//			// 敵弾の衝突時コールバックを呼び出す
+	//			playerBullet->OnCollision();
+
+	//		}
+	//	}
+	//}
+#pragma endregion
+}
+
+void GameScene::CheckAllCollisions3(Player* player, Enemy3* enemy)
+{
+	// 自弾リストの取得
+	const std::list<std::unique_ptr<PlayerBullet>>& playerBullets = player->GetBullets();
+
+	// 敵弾リストの取得
+	const std::list<std::unique_ptr<EnemyBullet>>& enemyBullets = enemy->GetBullets();
+
+#pragma region 自キャラと敵キャラの当たり判定
+	{
+		Vector3 posA, posB;
+		posA = player_->GetWorldPosition();
+
+		for (const std::unique_ptr<Enemy3>& enemy : enemys3_)
+		{
+			posB = enemy->GetWorldPosition();
+
+
+			float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+			{
+				if (len <= (enemy->radius + player_->radius) * (enemy->radius + player_->radius))
+				{
+					// 自キャラの衝突時コールバックを呼び出す
+					player_->OnCollision();
+
+					isDeadPlayer = true;
+				}
+			}
+		}
+	}
+
+#pragma region 自キャラと敵弾の当たり判定
+	//// 判定対象AとBの座標
+	//Vector3 posA, posB;
+
+	//posA = player_->GetWorldPosition();
+
+	//for (const std::unique_ptr<EnemyBullet>& enemyBullet : enemyBullets)
+	//{
+	//	posB = enemyBullet->GetWorldPosition();
+
+	//	float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+	//	if (len <= 0.5f)
+	//	{
+	//		// 自キャラの衝突時コールバックを呼び出す
+	//		player_->OnCollision();
+
+	//		// 敵弾の衝突時コールバックを呼び出す
+	//		enemyBullet->OnCollision();
+
+	//	}
+	//}
+#pragma endregion
+
+#pragma region 自弾と敵キャラの当たり判定
+	{
+		// 判定対象AとBの座標
+		WorldTransform posA = enemy->worldTransform_;
+		Vector3 posB;
+
+		for (const std::unique_ptr<PlayerBullet>& playerBullet : playerBullets)
+		{
+			posB = playerBullet->GetWorldPosition();
+
+			if (CollisionRayToObject(posB - playerBullet->velocity_, posB, posA, playerBullet->radius + enemy->radius))
+			{
+				// 自キャラの衝突時コールバックを呼び出す
+				enemy->OnCollision();
+
+				// 敵弾の衝突時コールバックを呼び出す
+				playerBullet->OnCollision();
+			}
+
+			//posB = playerBullet->GetWorldPosition();
+
+			//float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+			//if (len <= 6.0f)
+			//{
+			//	// 自キャラの衝突時コールバックを呼び出す
+			//	enemy_->OnCollision();
+
+			//	// 敵弾の衝突時コールバックを呼び出す
+			//	playerBullet->OnCollision();
+
+			//}
+		}
+
+		player->DeleteBullet();
+	}
+#pragma endregion
+
+#pragma region 自弾と敵弾の当たり判定
+
+	//for (const std::unique_ptr<EnemyBullet>& enemyBullet : enemyBullets)
+	//{
+	//	posA = enemyBullet->GetWorldPosition();
+
+	//	for (const std::unique_ptr<PlayerBullet>& playerBullet : playerBullets)
+	//	{
+	//		posB = playerBullet->GetWorldPosition();
+
+	//		float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+	//		if (len <= 6.0f)
+	//		{
+	//			// 自キャラの衝突時コールバックを呼び出す
+	//			enemyBullet->OnCollision();
+
+	//			// 敵弾の衝突時コールバックを呼び出す
+	//			playerBullet->OnCollision();
+
+	//		}
+	//	}
+	//}
+#pragma endregion
+}
+
+void GameScene::CheckAllCollisions4(Player* player, Enemy4* enemy)
+{
+	// 自弾リストの取得
+	const std::list<std::unique_ptr<PlayerBullet>>& playerBullets = player->GetBullets();
+
+	// 敵弾リストの取得
+	const std::list<std::unique_ptr<EnemyBullet>>& enemyBullets = enemy->GetBullets();
+
+#pragma region 自キャラと敵キャラの当たり判定
+	{
+		Vector3 posA, posB;
+		posA = player_->GetWorldPosition();
+
+		for (const std::unique_ptr<Enemy4>& enemy : enemys4_)
+		{
+			posB = enemy->GetWorldPosition();
+
+
+			float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+			{
+				if (len <= (enemy->radius + player_->radius) * (enemy->radius + player_->radius))
+				{
+					// 自キャラの衝突時コールバックを呼び出す
+					player_->OnCollision();
+
+					isDeadPlayer = true;
+				}
+			}
+		}
+	}
+
+#pragma region 自キャラと敵弾の当たり判定
+	//// 判定対象AとBの座標
+	//Vector3 posA, posB;
+
+	//posA = player_->GetWorldPosition();
+
+	//for (const std::unique_ptr<EnemyBullet>& enemyBullet : enemyBullets)
+	//{
+	//	posB = enemyBullet->GetWorldPosition();
+
+	//	float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+	//	if (len <= 0.5f)
+	//	{
+	//		// 自キャラの衝突時コールバックを呼び出す
+	//		player_->OnCollision();
+
+	//		// 敵弾の衝突時コールバックを呼び出す
+	//		enemyBullet->OnCollision();
+
+	//	}
+	//}
+#pragma endregion
+
+#pragma region 自弾と敵キャラの当たり判定
+	{
+		// 判定対象AとBの座標
+		WorldTransform posA = enemy->worldTransform_;
+		Vector3 posB;
+
+		for (const std::unique_ptr<PlayerBullet>& playerBullet : playerBullets)
+		{
+			posB = playerBullet->GetWorldPosition();
+
+			if (CollisionRayToObject(posB - playerBullet->velocity_, posB, posA, playerBullet->radius + enemy->radius))
+			{
+				// 自キャラの衝突時コールバックを呼び出す
+				enemy->OnCollision();
+
+				// 敵弾の衝突時コールバックを呼び出す
+				playerBullet->OnCollision();
+			}
 
 			//posB = playerBullet->GetWorldPosition();
 
@@ -629,6 +1172,7 @@ void GameScene::LoadEnemyPopData(){
 
 	// ファイルを開く
 	std::ifstream file;
+
 	file.open("Resources\\enemyPop.csv");
 	assert(file.is_open());
 
@@ -637,6 +1181,7 @@ void GameScene::LoadEnemyPopData(){
 
 	// ファイルを閉じる
 	file.close();
+
 }
 
 void GameScene::UpdateEnemyPopCommands()
@@ -720,11 +1265,67 @@ void GameScene::UpdateEnemyPopCommands()
 
 			// 敵を生成し、初期化
 			std::unique_ptr<Enemy2> newEnemy = std::make_unique<Enemy2>();
-			newEnemy->Initialize(enemy2Model_, enemy2TextureHandle_, pos);
+			newEnemy->Initialize(enemy1Model_, enemy1TextureHandle_, pos);
 			newEnemy->SetPlayer(player_);
 
 			// 敵を登録する
 			enemys2_.push_back(std::move(newEnemy));
+		}
+		else if (word.find("POPE3") == 0) {
+			// x座標
+			getline(line_stream, word, ',');
+			float x = (float)std::atof(word.c_str());
+
+			// y座標
+			getline(line_stream, word, ',');
+			float y = (float)std::atof(word.c_str());
+
+			// z座標
+			getline(line_stream, word, ',');
+			float z = (float)std::atof(word.c_str());
+
+			// Pattern
+			getline(line_stream, word, ',');
+			int p = (float)std::atof(word.c_str());
+
+			// 敵を発生させる
+			Vector3 pos = { x, y, z };
+
+			// 敵を生成し、初期化
+			std::unique_ptr<Enemy3> newEnemy = std::make_unique<Enemy3>();
+			newEnemy->Initialize(enemy3Model_, enemy3TextureHandle_, pos);
+			newEnemy->SetPlayer(player_);
+
+			// 敵を登録する
+			enemys3_.push_back(std::move(newEnemy));
+		}
+		else if (word.find("POPE4") == 0) {
+			// x座標
+			getline(line_stream, word, ',');
+			float x = (float)std::atof(word.c_str());
+
+			// y座標
+			getline(line_stream, word, ',');
+			float y = (float)std::atof(word.c_str());
+
+			// z座標
+			getline(line_stream, word, ',');
+			float z = (float)std::atof(word.c_str());
+
+			// Pattern
+			getline(line_stream, word, ',');
+			int p = (float)std::atof(word.c_str());
+
+			// 敵を発生させる
+			Vector3 pos = { x, y, z };
+
+			// 敵を生成し、初期化
+			std::unique_ptr<Enemy4> newEnemy = std::make_unique<Enemy4>();
+			newEnemy->Initialize(enemy4Model_, enemy4TextureHandle_, pos);
+			newEnemy->SetPlayer(player_);
+
+			// 敵を登録する
+			enemys4_.push_back(std::move(newEnemy));
 		}
 		else if (word.find("WAIT") == 0) {
 			std::getline(line_stream, word, ',');
@@ -744,6 +1345,49 @@ void GameScene::UpdateEnemyPopCommands()
 			// コマンドループを抜ける
 			break;
 		}
-		
+	}
+}
+
+void GameScene::UpdateScene()
+{
+	if (input_->TriggerKey(DIK_1))
+	{
+		scene = MENU;
+	}
+	if (input_->TriggerKey(DIK_2))
+	{
+		scene = PLAY;
+	}
+	if (input_->TriggerKey(DIK_3))
+	{
+		scene = GAMECLEAR;
+	}
+	if (input_->TriggerKey(DIK_4))
+	{
+		scene = GAMEOVER;
+	}
+
+	if (scene == MENU && pad_.IsButtonTrigger(XINPUT_GAMEPAD_A))
+	{
+		scene = PLAY;
+	}
+	if (scene == PLAY && isClear == true)
+	{
+		scene = GAMECLEAR;
+	}
+	if (scene == GAMEOVER)
+	{
+		if (pad_.IsButtonTrigger(XINPUT_GAMEPAD_A))
+		{
+			scene = PLAY;
+		}
+		else if (pad_.IsButtonTrigger(XINPUT_GAMEPAD_B))
+		{
+			scene = MENU;
+		}
+	}
+	if (scene == GAMECLEAR && pad_.IsButtonTrigger(XINPUT_GAMEPAD_A))
+	{
+		scene = MENU;
 	}
 }

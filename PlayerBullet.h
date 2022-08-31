@@ -10,7 +10,7 @@
 class PlayerBullet
 {
 public:
-	void Initialize(Model* model, const Vector3& position, const Vector3& velocity);
+	void Initialize(Model* model, const Vector3& position, float xSize, const Vector3& velocity);
 
 	void Update();
 
@@ -27,6 +27,9 @@ public:
 	Vector3 velocity_;
 
 	float radius = 5.0f;
+
+	// デスフラグ
+	bool isDead_ = false;
 
 private:
 	// ワールド変換データ
@@ -47,6 +50,5 @@ private:
 	// デスタイマー
 	int32_t deathTimer_ = kLifeTime;
 
-	// デスフラグ
-	bool isDead_ = false;
+	
 };
