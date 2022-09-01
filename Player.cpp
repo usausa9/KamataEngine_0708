@@ -171,6 +171,7 @@ void Player::Move()
 
 	worldTransform_[0].translation_ += move;
 
+
 	// ˆÚ“®ŒÀŠE
 	const float kMoveLimitX = 790.0f;
 	const float kMoveLimitY = 635.0f;
@@ -351,12 +352,12 @@ void Player::Attack()
 			//// ‘¬“xƒxƒNƒgƒ‹‚ðŽ©‹@‚ÌŒü‚«‚É‡‚í‚¹‚Ä‰ñ“]‚³‚¹‚é
 			//velocity = Vector3MultiMatrix4(velocity, worldTransform_[0].matWorld_);
 
-			Vector3 bulletPrefab = { worldTransform_[0].translation_.x + 45.0f,worldTransform_[0].translation_.y + 2.0f,worldTransform_[0].translation_.z };
-			Vector3 bulletPrefab2 = { worldTransform_[0].translation_.x + 45.0f,worldTransform_[0].translation_.y + 52.0f,worldTransform_[0].translation_.z };
-			Vector3 bulletPrefab3 = { worldTransform_[0].translation_.x + 45.0f,worldTransform_[0].translation_.y - 48.0f,worldTransform_[0].translation_.z };
+			Vector3 bulletPrefab = { worldTransform_[0].translation_.x + 45.0f,worldTransform_[0].translation_.y + 2.0f,worldTransform_[0].translation_.z+1.0f };
+			Vector3 bulletPrefab2 = { worldTransform_[0].translation_.x + 45.0f,worldTransform_[0].translation_.y + 52.0f,worldTransform_[0].translation_.z + 1.0f };
+			Vector3 bulletPrefab3 = { worldTransform_[0].translation_.x + 45.0f,worldTransform_[0].translation_.y - 48.0f,worldTransform_[0].translation_.z + 1.0f };
 
-			Vector3 bulletPrefab4 = { worldTransform_[0].translation_.x + 145.0f,worldTransform_[0].translation_.y + 52.0f,worldTransform_[0].translation_.z };
-			Vector3 bulletPrefab5 = { worldTransform_[0].translation_.x + 145.0f,worldTransform_[0].translation_.y - 48.0f,worldTransform_[0].translation_.z };
+			Vector3 bulletPrefab4 = { worldTransform_[0].translation_.x + 145.0f,worldTransform_[0].translation_.y + 52.0f,worldTransform_[0].translation_.z + 1.0f };
+			Vector3 bulletPrefab5 = { worldTransform_[0].translation_.x + 145.0f,worldTransform_[0].translation_.y - 48.0f,worldTransform_[0].translation_.z + 1.0f };
 
 			// ’e¶¬A‰Šú‰»
 
@@ -480,6 +481,7 @@ Vector3 Player::GetWorldPosition()
 
 void Player::OnCollision()
 {
+	isDead_ = true;
 }
 
 void Player::Update()
@@ -500,17 +502,20 @@ void Player::Update()
 
 void Player::Draw(ViewProjection viewProjection)
 {
-	model_->Draw(worldTransform_[0], viewProjection);
-
-	if (boost[OPTION] == USED || boost[OPTION] == USEDSELECT)
+	if (isDead_ == false)
 	{
-		optionModel_->Draw(worldTransform_[1], viewProjection, optionTextureHandle_);
-		optionModel_->Draw(worldTransform_[2], viewProjection, optionTextureHandle_);
-	}
+		model_->Draw(worldTransform_[0], viewProjection);
 
-	// ’e•`‰æ
-	for (std::unique_ptr<PlayerBullet>&bullet : bullets_) {
-		bullet->Draw(viewProjection);
+		if (boost[OPTION] == USED || boost[OPTION] == USEDSELECT)
+		{
+			optionModel_->Draw(worldTransform_[1], viewProjection, optionTextureHandle_);
+			optionModel_->Draw(worldTransform_[2], viewProjection, optionTextureHandle_);
+		}
+
+		// ’e•`‰æ
+		for (std::unique_ptr<PlayerBullet>& bullet : bullets_) {
+			bullet->Draw(viewProjection);
+		}
 	}
 
 	/*debugText_->SetPos(50, 130);
@@ -520,6 +525,12 @@ void Player::Draw(ViewProjection viewProjection)
 
 void Player::Reset()
 {
+	worldTransform_[0].translation_ = { 144.0f,360.0f,0 };
+	worldTransform_[0].rotation_ = { 0,90.0f * MathUtility::PI / 180.0f,0 };
+
+	getBoost = false;
+	isDead_ = false;
+
 	boostSelect = 5;
 	boost[0] = { 0 };
 	boost[1] = { 0 };
@@ -527,5 +538,6 @@ void Player::Reset()
 	boost[3] = { 0 };
 	boost[4] = { 0 };
 
-	shotTimer = 12;
+	shotTimer = 20;
+
 }

@@ -89,7 +89,10 @@ public:
 	const int lateTimer = 17;
 	const int fastTimer = 10;
 
-	const float radius = 5.0f;
+	const float radius = 12.0f;
+
+	// デスフラグ
+	bool isDead_ = false;
 
 	// インプット
 	Input* input_ = nullptr;

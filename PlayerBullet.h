@@ -16,6 +16,8 @@ public:
 
 	void Draw(const ViewProjection& viewProjection);
 
+	void Reset();
+
 	bool IsDead() const { return isDead_; }
 
 	// 衝突を検出したら呼び出されるコールバック関数

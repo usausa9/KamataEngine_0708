@@ -17,6 +17,7 @@ GameScene::~GameScene() {
 	delete enemy2Model_;
 	delete enemy3Model_;
 	delete enemy4Model_;
+	delete enemyBossModel_;
 	delete backGroundSprite_;
 	delete groundSprite_;
 	delete groundUseSprite_;
@@ -66,6 +67,7 @@ void GameScene::Initialize() {
 	//enemy2TextureHandle_ = TextureManager::Load("Enemy2.png");
 	enemy3TextureHandle_ = TextureManager::Load("Enemy3.png");
 	enemy4TextureHandle_ = TextureManager::Load("Enemy4.png");
+	enemyBossTextureHandle_ = TextureManager::Load("EnemyBoss.png");
 
 	bulletModelTextureHandle_ = TextureManager::Load("Bullet.png");
 	optionTextureHandle_ = TextureManager::Load("Option.png");
@@ -92,13 +94,16 @@ void GameScene::Initialize() {
 	orangeBer7TH = TextureManager::Load("orange7.png");
 
 	// 3Dモデル.スプライトの生成
-	model_ = Model::CreateFromOBJ("vicviper");
+	
 	bulletModel_ = Model::Create();
 	optionModel_ = Model::Create();
 	enemy1Model_ = Model::Create();
 	enemy2Model_ = Model::Create();
 	enemy3Model_ = Model::Create();
 	enemy4Model_ = Model::Create();
+	enemyBossModel_ = Model::Create();
+
+	model_ = Model::CreateFromOBJ("vicviper");
 
 	backGroundSprite_ = Sprite::Create(backGroundTextureHandle_, { 0,0 });
 	groundSprite_ = Sprite::Create(groundTextureHandle_, { 0,0 });
@@ -187,6 +192,8 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 
+	timeBase.TimeAdjustment();
+
 	pad_.Update();
 
 	// デスフラグの立っを削除
@@ -204,11 +211,15 @@ void GameScene::Update() {
 		return _enemy->IsDead();
 	});
 
-
 	// デスフラグの立った弾を削除
 	enemys4_.remove_if([](std::unique_ptr<Enemy4>& _enemy) {
 		return _enemy->IsDead();
 	});
+
+	// デスフラグの立った弾を削除
+	enemysBoss_.remove_if([](std::unique_ptr<EnemyBoss>& _enemy) {
+		return _enemy->IsDead();
+		});
 
 #ifdef _DEBUG
 
@@ -387,11 +398,11 @@ void GameScene::Update() {
 
 	UpdateScene();
 
+	// 自キャラの更新
+	player_->Update();
+
 	if (scene == PLAY)
 	{
-		// 自キャラの更新
-		player_->Update();
-
 		// 敵更新
 		for (std::unique_ptr<Enemy>& enemy : enemys_) {
 			enemy->Update();
@@ -411,6 +422,16 @@ void GameScene::Update() {
 		for (std::unique_ptr<Enemy4>& enemy : enemys4_) {
 			enemy->Update();
 			CheckAllCollisions4(player_, enemy.get());
+		}
+
+		for (std::unique_ptr<EnemyBoss>& enemy : enemysBoss_) {
+			enemy->Update();
+			CheckAllCollisions5(player_, enemy.get());
+
+			if (enemy->clear == true)
+			{
+				isClear = true;
+			}
 		}
 
 		if (enemy_) {
@@ -450,14 +471,24 @@ void GameScene::Update() {
 			enemy->isDead_ = true;
 		}
 
-		bool isClear = false;
+		for (std::unique_ptr<EnemyBoss>& enemy : enemysBoss_) {
+			enemy->isDead_ = true;
 
-		bool isDeadPlayer = false;
+			enemy->clear = false;
+		}
+
+		isClear = false;
+
+		isDeadPlayer = false;
 
 		// 待機中フラグ
-		bool isWait = false;
+		isWait = false;
 		// 待機タイマー
-		int waitTimer = 0;
+		waitTimer = 0;
+
+		clearTimer = 240;
+		deadTimer = 240;
+		
 	}
 
 	LoadEnemyPopData();
@@ -495,8 +526,7 @@ void GameScene::Draw() {
 	/// <summary>
 	/// ここに3Dオブジェクトの描画処理を追加できる
 	/// </summary>
-	/// 
-	// 自キャラの描画
+	/// // 自キャラの描画
 	player_->Draw(viewProjection_);
 
 	if (enemy_) {
@@ -518,6 +548,13 @@ void GameScene::Draw() {
 	for (std::unique_ptr<Enemy4>& enemy : enemys4_) {
 		enemy->Draw(viewProjection_);
 	}
+
+	for (std::unique_ptr<EnemyBoss>& enemy : enemysBoss_) {
+		enemy->Draw(viewProjection_);
+	}
+
+	/// 
+	
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
@@ -1168,6 +1205,125 @@ void GameScene::CheckAllCollisions4(Player* player, Enemy4* enemy)
 #pragma endregion
 }
 
+void GameScene::CheckAllCollisions5(Player* player, EnemyBoss* enemy)
+{
+	// 自弾リストの取得
+	const std::list<std::unique_ptr<PlayerBullet>>& playerBullets = player->GetBullets();
+
+	// 敵弾リストの取得
+	const std::list<std::unique_ptr<EnemyBullet>>& enemyBullets = enemy->GetBullets();
+
+#pragma region 自キャラと敵キャラの当たり判定
+	{
+		Vector3 posA, posB;
+		posA = player_->GetWorldPosition();
+
+		for (const std::unique_ptr<EnemyBoss>& enemy : enemysBoss_)
+		{
+			posB = enemy->GetWorldPosition();
+
+
+			float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+			{
+				if (len <= (enemy->radius + player_->radius) * (enemy->radius + player_->radius))
+				{
+					// 自キャラの衝突時コールバックを呼び出す
+					player_->OnCollision();
+
+					isDeadPlayer = true;
+				}
+			}
+		}
+	}
+
+#pragma region 自キャラと敵弾の当たり判定
+	//// 判定対象AとBの座標
+	//Vector3 posA, posB;
+
+	//posA = player_->GetWorldPosition();
+
+	//for (const std::unique_ptr<EnemyBullet>& enemyBullet : enemyBullets)
+	//{
+	//	posB = enemyBullet->GetWorldPosition();
+
+	//	float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+	//	if (len <= 0.5f)
+	//	{
+	//		// 自キャラの衝突時コールバックを呼び出す
+	//		player_->OnCollision();
+
+	//		// 敵弾の衝突時コールバックを呼び出す
+	//		enemyBullet->OnCollision();
+
+	//	}
+	//}
+#pragma endregion
+
+#pragma region 自弾と敵キャラの当たり判定
+	{
+		// 判定対象AとBの座標
+		WorldTransform posA = enemy->worldTransform_;
+		Vector3 posB;
+
+		for (const std::unique_ptr<PlayerBullet>& playerBullet : playerBullets)
+		{
+			posB = playerBullet->GetWorldPosition();
+
+			if (CollisionRayToObject(posB - playerBullet->velocity_, posB, posA, playerBullet->radius + enemy->radius))
+			{
+				// 自キャラの衝突時コールバックを呼び出す
+				enemy->OnCollision();
+
+				// 敵弾の衝突時コールバックを呼び出す
+				playerBullet->OnCollision();
+			}
+
+			//posB = playerBullet->GetWorldPosition();
+
+			//float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+			//if (len <= 6.0f)
+			//{
+			//	// 自キャラの衝突時コールバックを呼び出す
+			//	enemy_->OnCollision();
+
+			//	// 敵弾の衝突時コールバックを呼び出す
+			//	playerBullet->OnCollision();
+
+			//}
+		}
+
+		player->DeleteBullet();
+	}
+#pragma endregion
+
+#pragma region 自弾と敵弾の当たり判定
+
+	//for (const std::unique_ptr<EnemyBullet>& enemyBullet : enemyBullets)
+	//{
+	//	posA = enemyBullet->GetWorldPosition();
+
+	//	for (const std::unique_ptr<PlayerBullet>& playerBullet : playerBullets)
+	//	{
+	//		posB = playerBullet->GetWorldPosition();
+
+	//		float len = ((posB.x - posA.x) * (posB.x - posA.x)) + ((posB.y - posA.y) * (posB.y - posA.y)) + ((posB.z - posA.z) * (posB.z - posA.z));
+
+	//		if (len <= 6.0f)
+	//		{
+	//			// 自キャラの衝突時コールバックを呼び出す
+	//			enemyBullet->OnCollision();
+
+	//			// 敵弾の衝突時コールバックを呼び出す
+	//			playerBullet->OnCollision();
+
+	//		}
+	//	}
+	//}
+#pragma endregion
+}
+
 void GameScene::LoadEnemyPopData(){
 
 	// ファイルを開く
@@ -1215,7 +1371,77 @@ void GameScene::UpdateEnemyPopCommands()
 		}
 
 		// POPコマンド
-		if (word.find("POPE1") == 0) {
+		if (word.find("POPE1B") == 0) {
+
+			Vector3 pos;
+			for (std::unique_ptr<EnemyBoss>& enemy : enemysBoss_) {
+				pos = { enemy->worldTransform_.translation_.x,  enemy->worldTransform_.translation_.y,  enemy->worldTransform_.translation_.z };
+			}
+
+			if (isClear == false)
+			{
+				// 敵を生成し、初期化
+				std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>();
+				newEnemy->Initialize(enemy1Model_, enemy1TextureHandle_, pos);
+				newEnemy->SetPlayer(player_);
+
+				// 敵を登録する
+				enemys_.push_back(std::move(newEnemy));
+			}
+		}
+		else if (word.find("POPE2B") == 0) {
+			Vector3 pos;
+			for (std::unique_ptr<EnemyBoss>& enemy : enemysBoss_) {
+				pos = { enemy->worldTransform_.translation_.x,  enemy->worldTransform_.translation_.y,  enemy->worldTransform_.translation_.z };
+			}
+
+			if (isClear == false)
+			{
+				// 敵を生成し、初期化
+				std::unique_ptr<Enemy2> newEnemy = std::make_unique<Enemy2>();
+				newEnemy->Initialize(enemy1Model_, enemy1TextureHandle_, pos);
+				newEnemy->SetPlayer(player_);
+
+				// 敵を登録する
+				enemys2_.push_back(std::move(newEnemy));
+			}
+		}
+		else if (word.find("POPE3B") == 0) {
+			Vector3 pos;
+			for (std::unique_ptr<EnemyBoss>& enemy : enemysBoss_) {
+				pos = { enemy->worldTransform_.translation_.x,  enemy->worldTransform_.translation_.y,  enemy->worldTransform_.translation_.z };
+			}
+
+			if (isClear == false)
+			{
+				// 敵を生成し、初期化
+				std::unique_ptr<Enemy3> newEnemy = std::make_unique<Enemy3>();
+				newEnemy->Initialize(enemy3Model_, enemy3TextureHandle_, pos);
+				newEnemy->SetPlayer(player_);
+
+				// 敵を登録する
+
+				enemys3_.push_back(std::move(newEnemy));
+			}
+		}
+		else if (word.find("POPE4B") == 0) {
+			Vector3 pos;
+			for (std::unique_ptr<EnemyBoss>& enemy : enemysBoss_) {
+				pos = { enemy->worldTransform_.translation_.x,  enemy->worldTransform_.translation_.y,  enemy->worldTransform_.translation_.z };
+			}
+
+			if (isClear == false)
+			{
+				// 敵を生成し、初期化
+				std::unique_ptr<Enemy4> newEnemy = std::make_unique<Enemy4>();
+				newEnemy->Initialize(enemy4Model_, enemy4TextureHandle_, pos);
+				newEnemy->SetPlayer(player_);
+
+				// 敵を登録する
+				enemys4_.push_back(std::move(newEnemy));
+			}
+		}
+		else if (word.find("POPE1") == 0) {
 			// x座標
 			getline(line_stream, word, ',');
 			float x = (float)std::atof(word.c_str());
@@ -1227,10 +1453,6 @@ void GameScene::UpdateEnemyPopCommands()
 			// z座標
 			getline(line_stream, word, ',');
 			float z = (float)std::atof(word.c_str());
-
-			// Pattern
-			getline(line_stream, word, ',');
-			int p = (float)std::atof(word.c_str());
 
 			// 敵を発生させる
 			Vector3 pos = { x, y, z };
@@ -1255,10 +1477,6 @@ void GameScene::UpdateEnemyPopCommands()
 			// z座標
 			getline(line_stream, word, ',');
 			float z = (float)std::atof(word.c_str());
-
-			// Pattern
-			getline(line_stream, word, ',');
-			int p = (float)std::atof(word.c_str());
 
 			// 敵を発生させる
 			Vector3 pos = { x, y, z };
@@ -1312,10 +1530,6 @@ void GameScene::UpdateEnemyPopCommands()
 			getline(line_stream, word, ',');
 			float z = (float)std::atof(word.c_str());
 
-			// Pattern
-			getline(line_stream, word, ',');
-			int p = (float)std::atof(word.c_str());
-
 			// 敵を発生させる
 			Vector3 pos = { x, y, z };
 
@@ -1326,6 +1540,30 @@ void GameScene::UpdateEnemyPopCommands()
 
 			// 敵を登録する
 			enemys4_.push_back(std::move(newEnemy));
+		}
+		else if (word.find("POPE5") == 0) {
+		// x座標
+		getline(line_stream, word, ',');
+		float x = (float)std::atof(word.c_str());
+
+		// y座標
+		getline(line_stream, word, ',');
+		float y = (float)std::atof(word.c_str());
+
+		// z座標
+		getline(line_stream, word, ',');
+		float z = (float)std::atof(word.c_str());
+
+		// 敵を発生させる
+		Vector3 pos = { x, y, z };
+
+		// 敵を生成し、初期化
+		std::unique_ptr<EnemyBoss> newEnemy = std::make_unique<EnemyBoss>();
+		newEnemy->Initialize(enemyBossModel_, enemyBossTextureHandle_, pos);
+		newEnemy->SetPlayer(player_);
+
+		// 敵を登録する
+		enemysBoss_.push_back(std::move(newEnemy));
 		}
 		else if (word.find("WAIT") == 0) {
 			std::getline(line_stream, word, ',');
@@ -1373,7 +1611,23 @@ void GameScene::UpdateScene()
 	}
 	if (scene == PLAY && isClear == true)
 	{
-		scene = GAMECLEAR;
+
+		clearTimer--;
+
+		if (clearTimer <= 0)
+		{
+			scene = GAMECLEAR;
+		}
+	}
+	if (scene == PLAY && player_->isDead_ == true)
+	{
+
+		deadTimer--;
+
+		if (deadTimer <= 0)
+		{
+			scene = GAMEOVER;
+		}
 	}
 	if (scene == GAMEOVER)
 	{

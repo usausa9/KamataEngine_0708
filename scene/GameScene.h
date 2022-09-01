@@ -10,6 +10,7 @@
 #include "ViewProjection.h"
 #include "MyViewProjection.h"
 #include "WorldTransform.h"
+#include "TimeBaseLoopExecuter.h"
 
 #include <sstream>
 
@@ -22,6 +23,8 @@
 #include "Enemy2.h"
 #include "Enemy3.h"
 #include "Enemy4.h"
+#include "EnemyBoss.h"
+
 
 #include "PadInput.h"
 
@@ -103,6 +106,7 @@ public: // メンバ変数
 	void CheckAllCollisions2(Player* player, Enemy2* enemy);
 	void CheckAllCollisions3(Player* player, Enemy3* enemy);
 	void CheckAllCollisions4(Player* player, Enemy4* enemy);
+	void CheckAllCollisions5(Player* player, EnemyBoss* enemy);
 
   private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
@@ -128,6 +132,7 @@ public: // メンバ変数
 	uint32_t enemy2TextureHandle_ = 0;
 	uint32_t enemy3TextureHandle_ = 0;
 	uint32_t enemy4TextureHandle_ = 0;
+	uint32_t enemyBossTextureHandle_ = 0;
 
 	uint32_t blueBer1TH = 0;
 	uint32_t blueBer2TH = 0;
@@ -151,6 +156,7 @@ public: // メンバ変数
 	Model* enemy2Model_ = nullptr;
 	Model* enemy3Model_ = nullptr;
 	Model* enemy4Model_ = nullptr;
+	Model* enemyBossModel_ = nullptr;
 
 	Sprite* gameClearSprite_ = nullptr;
 	Sprite* gameOverSprite_ = nullptr;
@@ -185,6 +191,8 @@ public: // メンバ変数
 	// デバッグカメラ
 	DebugCamera* debugCamera_ = nullptr;
 
+	TimeBaseLoopExecuter timeBase;
+
 	// まとりっくす
 	Matrix matrix;
 
@@ -199,6 +207,8 @@ public: // メンバ変数
 	std::list<std::unique_ptr<Enemy3>> enemys3_;
 	std::list<std::unique_ptr<Enemy4>> enemys4_;
 
+	std::list<std::unique_ptr<EnemyBoss>> enemysBoss_;
+
 	// 敵の位置
 	Vector3 enemyPos{ -300,1000300,0 };
 
@@ -211,6 +221,9 @@ public: // メンバ変数
 
 	int scene = MENU;
 	bool isClear = false;
+
+	int clearTimer = 240;
+	int deadTimer = 240;
 
 	bool isDeadPlayer = false;
 
