@@ -56,6 +56,7 @@ void GameScene::Initialize() {
 	dxCommon_ = DirectXCommon::GetInstance();
 	input_ = Input::GetInstance();
 	audio_ = Audio::GetInstance();
+	audio2_ = Audio::GetInstance();
 	debugText_ = DebugText::GetInstance();
 
 	pad_.Initialize();
@@ -75,9 +76,15 @@ void GameScene::Initialize() {
 	groundTextureHandle_ = TextureManager::Load("Ground.png");
 	groundUseTextureHandle_ = TextureManager::Load("GroundUSE.png");
 
+
 	menuTextureHandle_ = TextureManager::Load("Start.png");
 	gameClearTextureHandle_ = TextureManager::Load("GameClear.png");
 	gameOverTextureHandle_ = TextureManager::Load("Gameover.png");
+
+	// サウンド読み込み
+	bgmDataHandle_ = audio_->LoadWave("BGM.wav");
+	// サウンド読み込み
+	bgm2DataHandle_ = audio2_->LoadWave("BGM2.wav");
 
 	blueBer1TH = TextureManager::Load("blue1.png");
 	blueBer2TH = TextureManager::Load("blue2.png");
@@ -149,6 +156,8 @@ void GameScene::Initialize() {
 
 	// 敵キャラに自キャラのアドレスを渡す
 	enemy_->SetPlayer(player_);
+
+	bgmVoiceHandle_ = audio_->PlayWave(bgmDataHandle_, true);
 
 #pragma region ビュー変換行列
 	
@@ -398,11 +407,16 @@ void GameScene::Update() {
 
 	UpdateScene();
 
-	// 自キャラの更新
-	player_->Update();
+	
+
 
 	if (scene == PLAY)
 	{
+		if (deadTimer == 240)
+		{
+			// 自キャラの更新
+			player_->Update();
+		}
 		// 敵更新
 		for (std::unique_ptr<Enemy>& enemy : enemys_) {
 			enemy->Update();
@@ -797,6 +811,8 @@ void GameScene::CheckAllCollisions(Player* player, Enemy* enemy)
 				// 自キャラの衝突時コールバックを呼び出す
 				enemy->OnCollision();
 
+				audio2_->PlayWave(bgm2DataHandle_, false, 1.4f);
+
 				// 敵弾の衝突時コールバックを呼び出す
 				playerBullet->OnCollision();
 			}
@@ -915,7 +931,7 @@ void GameScene::CheckAllCollisions2(Player* player, Enemy2* enemy)
 			{
 				// 自キャラの衝突時コールバックを呼び出す
 				enemy->OnCollision();
-
+				audio2_->PlayWave(bgm2DataHandle_, false, 1.4f);
 				player_->getBoost = true;
 
 				// 敵弾の衝突時コールバックを呼び出す
@@ -991,7 +1007,6 @@ void GameScene::CheckAllCollisions3(Player* player, Enemy3* enemy)
 				{
 					// 自キャラの衝突時コールバックを呼び出す
 					player_->OnCollision();
-
 					isDeadPlayer = true;
 				}
 			}
@@ -1036,7 +1051,7 @@ void GameScene::CheckAllCollisions3(Player* player, Enemy3* enemy)
 			{
 				// 自キャラの衝突時コールバックを呼び出す
 				enemy->OnCollision();
-
+				audio2_->PlayWave(bgm2DataHandle_, false, 1.4f);
 				// 敵弾の衝突時コールバックを呼び出す
 				playerBullet->OnCollision();
 			}
@@ -1155,7 +1170,7 @@ void GameScene::CheckAllCollisions4(Player* player, Enemy4* enemy)
 			{
 				// 自キャラの衝突時コールバックを呼び出す
 				enemy->OnCollision();
-
+				audio2_->PlayWave(bgm2DataHandle_, false, 1.4f);
 				// 敵弾の衝突時コールバックを呼び出す
 				playerBullet->OnCollision();
 			}
@@ -1229,7 +1244,7 @@ void GameScene::CheckAllCollisions5(Player* player, EnemyBoss* enemy)
 				{
 					// 自キャラの衝突時コールバックを呼び出す
 					player_->OnCollision();
-
+					
 					isDeadPlayer = true;
 				}
 			}
@@ -1274,7 +1289,7 @@ void GameScene::CheckAllCollisions5(Player* player, EnemyBoss* enemy)
 			{
 				// 自キャラの衝突時コールバックを呼び出す
 				enemy->OnCollision();
-
+				audio2_->PlayWave(bgm2DataHandle_, false, 1.4f);
 				// 敵弾の衝突時コールバックを呼び出す
 				playerBullet->OnCollision();
 			}
@@ -1588,27 +1603,17 @@ void GameScene::UpdateEnemyPopCommands()
 
 void GameScene::UpdateScene()
 {
-	if (input_->TriggerKey(DIK_1))
-	{
-		scene = MENU;
-	}
-	if (input_->TriggerKey(DIK_2))
-	{
-		scene = PLAY;
-	}
-	if (input_->TriggerKey(DIK_3))
-	{
-		scene = GAMECLEAR;
-	}
-	if (input_->TriggerKey(DIK_4))
-	{
-		scene = GAMEOVER;
-	}
 
 	if (scene == MENU && pad_.IsButtonTrigger(XINPUT_GAMEPAD_A))
 	{
 		scene = PLAY;
 	}
+
+	if (scene == MENU && input_->TriggerKey(DIK_SPACE))
+	{
+		scene = PLAY;
+	}
+
 	if (scene == PLAY && isClear == true)
 	{
 
@@ -1631,16 +1636,21 @@ void GameScene::UpdateScene()
 	}
 	if (scene == GAMEOVER)
 	{
-		if (pad_.IsButtonTrigger(XINPUT_GAMEPAD_A))
+		if (pad_.IsButtonTrigger(XINPUT_GAMEPAD_A) || input_->TriggerKey(DIK_SPACE))
 		{
 			scene = PLAY;
 		}
-		else if (pad_.IsButtonTrigger(XINPUT_GAMEPAD_B))
+		else if (pad_.IsButtonTrigger(XINPUT_GAMEPAD_B) || input_->TriggerKey(DIK_ESCAPE))
 		{
 			scene = MENU;
 		}
 	}
 	if (scene == GAMECLEAR && pad_.IsButtonTrigger(XINPUT_GAMEPAD_A))
+	{
+		scene = MENU;
+	}
+
+	if (scene == GAMECLEAR && input_->TriggerKey(DIK_SPACE))
 	{
 		scene = MENU;
 	}

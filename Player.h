@@ -8,6 +8,7 @@
 #include "Matrix.h"
 #include "PlayerBullet.h"
 #include "PadInput.h"
+#include "Audio.h"
 
 #include<memory>
 #include<list>
@@ -69,6 +70,7 @@ public:
 	// 衝突を検出したら呼び出されるコールバック関数
 	void OnCollision();
 
+
 	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() { return bullets_; };
 
 	// ワールド変換データ
@@ -86,7 +88,7 @@ public:
 
 	int shotTimer = 20;
 
-	const int lateTimer = 17;
+	const int lateTimer = 16;
 	const int fastTimer = 10;
 
 	const float radius = 12.0f;
@@ -94,9 +96,20 @@ public:
 	// デスフラグ
 	bool isDead_ = false;
 
+	bool isPlayBreak = true;
+
 	// インプット
 	Input* input_ = nullptr;
 	PadInput pad_;
+	Audio* shotAudio_ = nullptr;
+	Audio* itemAudio_ = nullptr;
+	Audio* powerUpAudio_ = nullptr;
+	Audio* breakAudio = nullptr;
+
+	uint32_t itemDataHandle_ = 0;
+	uint32_t powerUpDataHandle_ = 0;
+	uint32_t shotDataHandle_ = 0;
+	uint32_t breakDataHandle_ = 0;
 
 	// デバックテキスト
 	DebugText* debugText_ = nullptr;

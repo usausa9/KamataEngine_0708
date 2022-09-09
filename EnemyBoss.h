@@ -7,6 +7,7 @@
 #include "Debugtext.h"
 #include "Matrix.h"
 #include "EnemyBullet.h"
+#include "Audio.h"
 
 #include <cassert>
 
@@ -71,6 +72,9 @@ private:
 
 	// マトリックス
 	Matrix matrix_;
+
+	Audio* breakAudio_ = nullptr;
+	uint32_t breakDataHandle_ = 0;
 
 	// テクスチャハンドル
 	uint32_t textureHandle_ = 0u;

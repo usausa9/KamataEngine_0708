@@ -19,6 +19,16 @@ void Player::Initialize(Model* model,Model* model2,Model* model3,uint32_t textur
 	optionTextureHandle_ = TextureManager::Load("Option.png");
 
 	// シングルトンインスタンスを取得する
+	shotAudio_ = Audio::GetInstance();
+	itemAudio_ = Audio::GetInstance();
+	powerUpAudio_ = Audio::GetInstance();
+	breakAudio = Audio::GetInstance();
+
+	itemDataHandle_ = itemAudio_->LoadWave("GetItem.wav");
+	shotDataHandle_ = shotAudio_->LoadWave("Shot.wav");
+	powerUpDataHandle_ = powerUpAudio_->LoadWave("PowerUp.wav");
+	breakDataHandle_ = breakAudio->LoadWave("PlayerBreak.wav");
+
 	input_ = Input::GetInstance();
 	pad_.Initialize();
 	debugText_ = DebugText::GetInstance();
@@ -189,11 +199,13 @@ void Player::ChangeBoost()
 	{
 		if (boostSelect != _NONE)
 		{
+			itemAudio_->PlayWave(itemDataHandle_);
 			boostSelect++;
 			getBoost = false;
 		}
 		else
 		{
+			itemAudio_->PlayWave(itemDataHandle_);
 			boostSelect = SPEEDUP;
 			getBoost = false;
 		}
@@ -205,6 +217,7 @@ void Player::ChangeBoost()
 		{
 			if (input_->TriggerKey(DIK_M) || pad_.IsButtonTrigger(XINPUT_GAMEPAD_B))
 			{
+				powerUpAudio_->PlayWave(powerUpDataHandle_);
 				boost[DOUBLE] = NONE;
 				boost[LASER] = USED;
 				boostSelect = _NONE;
@@ -214,6 +227,7 @@ void Player::ChangeBoost()
 		{
 			if (input_->TriggerKey(DIK_M) || pad_.IsButtonTrigger(XINPUT_GAMEPAD_B))
 			{
+				powerUpAudio_->PlayWave(powerUpDataHandle_);
 				boost[DOUBLE] = USED;
 				boost[LASER] = NONE;
 				boostSelect = _NONE;
@@ -223,6 +237,7 @@ void Player::ChangeBoost()
 		{
 			if (input_->TriggerKey(DIK_M) || pad_.IsButtonTrigger(XINPUT_GAMEPAD_B))
 			{
+				powerUpAudio_->PlayWave(powerUpDataHandle_);
 				boost[i] = USED;
 				boostSelect = _NONE;
 			}
@@ -341,6 +356,7 @@ void Player::Attack()
 
 		if (shotTimer == 0 || input_->TriggerKey(DIK_SPACE) || pad_.IsButtonTrigger(XINPUT_GAMEPAD_A))
 		{
+			shotAudio_->PlayWave(shotDataHandle_,false,0.7f);
 			// 弾の速度
 			const float kBulletSpeed = 15.0f;
 			Vector3 velocity(kBulletSpeed, 0, 0);
@@ -482,11 +498,17 @@ Vector3 Player::GetWorldPosition()
 void Player::OnCollision()
 {
 	isDead_ = true;
+
+	if (isPlayBreak == true && isDead_ == true)
+	{
+		breakAudio->PlayWave(breakDataHandle_, false, 2.0f);
+		isPlayBreak = false;
+	}
+
 }
 
 void Player::Update()
 {
-	
 	Player::Rotate();
 	Player::Move();
 	Player::Attack();
@@ -517,7 +539,7 @@ void Player::Draw(ViewProjection viewProjection)
 			bullet->Draw(viewProjection);
 		}
 	}
-
+	
 	/*debugText_->SetPos(50, 130);
 	debugText_->Printf(
 		"pos:%f,%f,%f", worldTransform_[0].translation_.x, worldTransform_[0].translation_.y, worldTransform_[0].translation_.z);*/
@@ -540,4 +562,9 @@ void Player::Reset()
 
 	shotTimer = 20;
 
+	isPlayBreak = true;
+
+	for (std::unique_ptr<PlayerBullet>& bullet : bullets_) {
+		bullet->isDead_ = true;
+	}
 }

@@ -58,7 +58,6 @@ public: // メンバ変数
 		GAMEOVER
 	};
 
-
   public: // メンバ関数
 	/// <summary>
 	/// コンストクラタ
@@ -84,8 +83,6 @@ public: // メンバ変数
 	void UpdateEnemyPopCommands();
 
 	void UpdateScene();
-
-	
 
 	/// <summary>
 	/// 初期化
@@ -114,8 +111,17 @@ public: // メンバ変数
 	Input* input_ = nullptr;
 	PadInput pad_;
 	Audio* audio_ = nullptr;
+	Audio* audio2_ = nullptr;
 	DebugText* debugText_ = nullptr;
 
+	// サウンドデータハンドル
+	uint32_t bgmDataHandle_ = 0;
+
+	uint32_t bgmVoiceHandle_ = 0;
+	// サウンドデータハンドル
+	uint32_t bgm2DataHandle_ = 0;
+
+	uint32_t bgm2VoiceHandle_ = 0;
 	// テクスチャハンドル
 	uint32_t textureHandle_ = 0;
 	uint32_t bulletModelTextureHandle_ = 0;
@@ -221,6 +227,7 @@ public: // メンバ変数
 
 	int scene = MENU;
 	bool isClear = false;
+	bool isPlayBreak = true;
 
 	int clearTimer = 240;
 	int deadTimer = 240;

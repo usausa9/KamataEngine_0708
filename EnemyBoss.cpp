@@ -11,7 +11,9 @@ void EnemyBoss::Initialize(Model* model, uint32_t textureHandle, const Vector3& 
 	textureHandle_ = textureHandle;
 
 	debugText_ = DebugText::GetInstance();
+	breakAudio_ = Audio::GetInstance();
 
+	breakDataHandle_ = breakAudio_->LoadWave("PlayerBreak.wav");
 	// ƒ[ƒ‹ƒh•ÏŠ·‚Ì‰Šú‰»
 	worldTransform_.Initialize();
 
@@ -89,7 +91,7 @@ void EnemyBoss::Update()
 
 	if (worldTransform_.translation_.x <= 700 && phase == 0)
 	{
-			phase = 1;
+		phase = 1;
 	}
 
 	if (worldTransform_.translation_.y <= 180 && phase == 1)
@@ -176,6 +178,9 @@ void EnemyBoss::OnCollision()
 	{
 		isDead_ = true;
 		clear = true;
+
+		breakAudio_->PlayWave(breakDataHandle_, false, 2.0f);
+		HP = 150;
 	}
 }
 
